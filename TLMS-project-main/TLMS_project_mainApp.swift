@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct TLMS_project_mainApp: App {
+    @StateObject private var authService = AuthService()
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AuthenticationView()
+                .environmentObject(authService)
         }
     }
 }
