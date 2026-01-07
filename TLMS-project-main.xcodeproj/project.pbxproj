@@ -7,19 +7,19 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		631803032F0E5A0800B7AC96 /* TLMS-Team2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TLMS-Team2.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FE5841042F0E650B00BA7706 /* TLMS-project-main.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TLMS-project-main.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		631803052F0E5A0800B7AC96 /* TLMS-Team2 */ = {
+		FE5841062F0E650B00BA7706 /* TLMS-project-main */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "TLMS-Team2";
+			path = "TLMS-project-main";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		631803002F0E5A0800B7AC96 /* Frameworks */ = {
+		FE5841012F0E650B00BA7706 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -29,18 +29,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		631802FA2F0E5A0800B7AC96 = {
+		FE5840FB2F0E650B00BA7706 = {
 			isa = PBXGroup;
 			children = (
-				631803052F0E5A0800B7AC96 /* TLMS-Team2 */,
-				631803042F0E5A0800B7AC96 /* Products */,
+				FE5841062F0E650B00BA7706 /* TLMS-project-main */,
+				FE5841052F0E650B00BA7706 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		631803042F0E5A0800B7AC96 /* Products */ = {
+		FE5841052F0E650B00BA7706 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				631803032F0E5A0800B7AC96 /* TLMS-Team2.app */,
+				FE5841042F0E650B00BA7706 /* TLMS-project-main.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,64 +48,64 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		631803022F0E5A0800B7AC96 /* TLMS-Team2 */ = {
+		FE5841032F0E650B00BA7706 /* TLMS-project-main */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6318030E2F0E5A0800B7AC96 /* Build configuration list for PBXNativeTarget "TLMS-Team2" */;
+			buildConfigurationList = FE58410F2F0E650D00BA7706 /* Build configuration list for PBXNativeTarget "TLMS-project-main" */;
 			buildPhases = (
-				631802FF2F0E5A0800B7AC96 /* Sources */,
-				631803002F0E5A0800B7AC96 /* Frameworks */,
-				631803012F0E5A0800B7AC96 /* Resources */,
+				FE5841002F0E650B00BA7706 /* Sources */,
+				FE5841012F0E650B00BA7706 /* Frameworks */,
+				FE5841022F0E650B00BA7706 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				631803052F0E5A0800B7AC96 /* TLMS-Team2 */,
+				FE5841062F0E650B00BA7706 /* TLMS-project-main */,
 			);
-			name = "TLMS-Team2";
+			name = "TLMS-project-main";
 			packageProductDependencies = (
 			);
-			productName = "TLMS-Team2";
-			productReference = 631803032F0E5A0800B7AC96 /* TLMS-Team2.app */;
+			productName = "TLMS-project-main";
+			productReference = FE5841042F0E650B00BA7706 /* TLMS-project-main.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		631802FB2F0E5A0800B7AC96 /* Project object */ = {
+		FE5840FC2F0E650B00BA7706 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
-					631803022F0E5A0800B7AC96 = {
-						CreatedOnToolsVersion = 26.0;
+					FE5841032F0E650B00BA7706 = {
+						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
 			};
-			buildConfigurationList = 631802FE2F0E5A0800B7AC96 /* Build configuration list for PBXProject "TLMS-Team2" */;
+			buildConfigurationList = FE5840FF2F0E650B00BA7706 /* Build configuration list for PBXProject "TLMS-project-main" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
 			);
-			mainGroup = 631802FA2F0E5A0800B7AC96;
+			mainGroup = FE5840FB2F0E650B00BA7706;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
-			productRefGroup = 631803042F0E5A0800B7AC96 /* Products */;
+			productRefGroup = FE5841052F0E650B00BA7706 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				631803022F0E5A0800B7AC96 /* TLMS-Team2 */,
+				FE5841032F0E650B00BA7706 /* TLMS-project-main */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		631803012F0E5A0800B7AC96 /* Resources */ = {
+		FE5841022F0E650B00BA7706 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -115,7 +115,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		631802FF2F0E5A0800B7AC96 /* Sources */ = {
+		FE5841002F0E650B00BA7706 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -125,7 +125,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		6318030C2F0E5A0800B7AC96 /* Debug */ = {
+		FE58410D2F0E650D00BA7706 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -160,7 +160,6 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 4ZNPSA2GSY;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -189,7 +188,7 @@
 			};
 			name = Debug;
 		};
-		6318030D2F0E5A0800B7AC96 /* Release */ = {
+		FE58410E2F0E650D00BA7706 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -224,7 +223,6 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = 4ZNPSA2GSY;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -246,14 +244,13 @@
 			};
 			name = Release;
 		};
-		6318030F2F0E5A0800B7AC96 /* Debug */ = {
+		FE5841102F0E650D00BA7706 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4ZNPSA2GSY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -266,7 +263,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Ketan.TLMS-Team2";
+				PRODUCT_BUNDLE_IDENTIFIER = "engineer.niharsandhu.TLMS-project-main";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -278,14 +275,13 @@
 			};
 			name = Debug;
 		};
-		631803102F0E5A0800B7AC96 /* Release */ = {
+		FE5841112F0E650D00BA7706 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 4ZNPSA2GSY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -298,7 +294,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "Ketan.TLMS-Team2";
+				PRODUCT_BUNDLE_IDENTIFIER = "engineer.niharsandhu.TLMS-project-main";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -313,25 +309,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		631802FE2F0E5A0800B7AC96 /* Build configuration list for PBXProject "TLMS-Team2" */ = {
+		FE5840FF2F0E650B00BA7706 /* Build configuration list for PBXProject "TLMS-project-main" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6318030C2F0E5A0800B7AC96 /* Debug */,
-				6318030D2F0E5A0800B7AC96 /* Release */,
+				FE58410D2F0E650D00BA7706 /* Debug */,
+				FE58410E2F0E650D00BA7706 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		6318030E2F0E5A0800B7AC96 /* Build configuration list for PBXNativeTarget "TLMS-Team2" */ = {
+		FE58410F2F0E650D00BA7706 /* Build configuration list for PBXNativeTarget "TLMS-project-main" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6318030F2F0E5A0800B7AC96 /* Debug */,
-				631803102F0E5A0800B7AC96 /* Release */,
+				FE5841102F0E650D00BA7706 /* Debug */,
+				FE5841112F0E650D00BA7706 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 631802FB2F0E5A0800B7AC96 /* Project object */;
+	rootObject = FE5840FC2F0E650B00BA7706 /* Project object */;
 }

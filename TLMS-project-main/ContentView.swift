@@ -1,8 +1,8 @@
 //
 //  ContentView.swift
-//  TLMS-Team2
+//  TLMS-project-main
 //
-//  Created by Ketan Sharma on 07/01/26.
+//  Created by Nihar Sandhu on 07/01/26.
 //
 
 import SwiftUI
