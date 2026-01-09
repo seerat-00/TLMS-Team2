@@ -42,6 +42,7 @@ struct User: Identifiable, Codable {
     let role: UserRole
     let approvalStatus: ApprovalStatus
     let resumeUrl: String?
+    let passwordResetRequired: Bool?
     let createdAt: Date
     let updatedAt: Date
     
@@ -51,6 +52,7 @@ struct User: Identifiable, Codable {
         case fullName = "full_name"
         case role
         case approvalStatus = "approval_status"
+        case passwordResetRequired = "password_reset_required"
         case resumeUrl = "resume_url"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
@@ -59,8 +61,10 @@ struct User: Identifiable, Codable {
     // Check if user can access their role-specific features
     var canAccessFeatures: Bool {
         switch role {
-        case .learner, .admin:
+        case .learner:
             return approvalStatus == .approved
+        case .admin:
+            return approvalStatus == .approved && !(passwordResetRequired ?? false)
         case .educator:
             return approvalStatus == .approved
         }
