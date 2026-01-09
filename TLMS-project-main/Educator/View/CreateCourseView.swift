@@ -24,7 +24,7 @@ struct CreateCourseView: View {
                 VStack(spacing: 24) {
                     // Header
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Create New Course")
+                        Text("Create Course")
                             .font(.system(size: 28, weight: .bold))
                         
                         Text("Start by providing the basic details for your course.")
@@ -141,6 +141,7 @@ struct CreateCourseView: View {
                 }
             }
         }
+        .navigationTitle("Create Course")
         .navigationBarTitleDisplayMode(.inline)
     }
 }
