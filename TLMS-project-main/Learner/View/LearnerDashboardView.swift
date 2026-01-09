@@ -186,6 +186,7 @@ struct EmptyStateView: View {
         role: .learner,
         approvalStatus: .approved,
         resumeUrl: nil,
+        passwordResetRequired: false,
         createdAt: Date(),
         updatedAt: Date()
     ))

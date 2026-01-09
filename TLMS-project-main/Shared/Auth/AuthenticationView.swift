@@ -29,8 +29,13 @@ struct AuthenticationView: View {
                     }
                 }
             } else if authService.isAuthenticated, let user = authService.currentUser {
-                // User is authenticated - route to appropriate dashboard
-                MainAppView(user: user)
+                if user.role == .admin && (user.passwordResetRequired ?? false) {
+                    // Admin must change password
+                    ChangePasswordView()
+                } else {
+                    // User is authenticated - route to appropriate dashboard
+                    MainAppView(user: user)
+                }
             } else {
                 // Not authenticated - show login
                 LoginView()

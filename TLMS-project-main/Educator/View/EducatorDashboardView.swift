@@ -218,6 +218,7 @@ struct RejectedBanner: View {
         role: .educator,
         approvalStatus: .approved,
         resumeUrl: nil,
+        passwordResetRequired: false,
         createdAt: Date(),
         updatedAt: Date()
     ))

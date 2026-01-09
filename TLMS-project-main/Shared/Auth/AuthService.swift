@@ -296,4 +296,36 @@ class AuthService: ObservableObject {
             return []
         }
     }
+    
+    // MARK: - Password Management
+    
+    func updatePassword(newPassword: String) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            // Update password in Supabase Auth
+            let _ = try await supabase.auth.update(
+                user: UserAttributes(password: newPassword)
+            )
+            
+            // If current user is admin, update the password_reset_required flag
+            if let user = currentUser, user.role == .admin {
+                try await supabase
+                    .from("user_profiles")
+                    .update(["password_reset_required": false])
+                    .eq("id", value: user.id.uuidString)
+                    .execute()
+                
+                // Refresh profile
+                await fetchUserProfile()
+            }
+            
+            return true
+        } catch {
+            errorMessage = "Failed to update password: \(error.localizedDescription)"
+            return false
+        }
+    }
 }

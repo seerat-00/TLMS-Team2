@@ -464,6 +464,7 @@ struct UserCard: View {
         role: .admin,
         approvalStatus: .approved,
         resumeUrl: nil,
+        passwordResetRequired: false,
         createdAt: Date(),
         updatedAt: Date()
     ))
