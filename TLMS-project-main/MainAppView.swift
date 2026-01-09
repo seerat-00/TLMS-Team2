@@ -15,7 +15,7 @@ struct MainAppView: View {
         Group {
             switch user.role {
             case .learner:
-                LearnerDashboardView(user: user)
+                LearnerRootView(user: user)
             case .educator:
                 EducatorDashboardView(user: user)
             case .admin:
