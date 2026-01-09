@@ -153,10 +153,10 @@ class AuthService: ObservableObject {
                     )
                 )
             
-            // Get public URL
-            let url = try supabase.storage
+            // Create signed URL (valid for 1 hour) for private bucket
+            let url = try await supabase.storage
                 .from("educator-resumes")
-                .getPublicURL(path: filePath)
+                .createSignedURL(path: filePath, expiresIn: 3600)
             
             return url.absoluteString
         } catch {
