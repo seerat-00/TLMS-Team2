@@ -10,8 +10,10 @@ import SwiftUI
 struct LearnerDashboardView: View {
     let user: User
     @EnvironmentObject var authService: AuthService
+    @StateObject private var courseService = CourseService()
+    @State private var publishedCourses: [Course] = []
+    @State private var isLoading = false
     @State private var showProfile = false
-    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         NavigationView {
@@ -41,47 +43,65 @@ struct LearnerDashboardView: View {
                             StatCard(
                                 icon: "book.fill",
                                 title: "Courses",
-                                value: "0",
-                                color: Color(red: 0.4, green: 0.5, blue: 1)
+                                value: "\(publishedCourses.count)",
+                                color: AppTheme.primaryBlue
                             )
                             
                             StatCard(
                                 icon: "chart.line.uptrend.xyaxis",
                                 title: "Progress",
                                 value: "0%",
-                                color: Color(red: 0.5, green: 0.3, blue: 0.9)
+                                color: AppTheme.successGreen
                             )
                         }
                         .padding(.horizontal)
                         
                         // Course sections
                         VStack(alignment: .leading, spacing: 16) {
-                            Text("Continue Learning")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(.primary)
+                            Text("Available Courses")
+                                .font(.title2.bold())
+                                .foregroundColor(AppTheme.primaryText)
                                 .padding(.horizontal)
                             
-                            // Placeholder for courses
-                            VStack(spacing: 12) {
+                            if isLoading {
+                                ProgressView()
+                                    .padding()
+                            } else if publishedCourses.isEmpty {
                                 EmptyStateView(
                                     icon: "book.closed.fill",
-                                    title: "No courses yet",
-                                    message: "Start exploring courses to begin your learning journey"
+                                    title: "No courses available",
+                                    message: "Check back later for new content"
                                 )
+                                .padding(.horizontal)
+                            } else {
+                                LazyVStack(spacing: 16) {
+                                    ForEach(publishedCourses) { course in
+                                        PublishedCourseCard(course: course)
+                                    }
+                                }
+                                .padding(.horizontal)
                             }
-                            .padding(.horizontal)
                         }
                         
                         Spacer(minLength: 40)
                     }
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle("Dashboard")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button(action: { showProfile = true }) {
                             Label("Profile", systemImage: "person.circle")
+                        }
+                        
+                        Button(action: {
+                            Task {
+                                await loadData()
+                            }
+                        }) {
+                            Label("Refresh", systemImage: "arrow.clockwise")
                         }
                         
                         Divider()
@@ -92,13 +112,22 @@ struct LearnerDashboardView: View {
                     } label: {
                         Image(systemName: "ellipsis.circle.fill")
                             .font(.system(size: 24))
-                            .foregroundColor(Color(red: 0.4, green: 0.5, blue: 1))
+                            .foregroundColor(AppTheme.primaryBlue)
                     }
                 }
             }
         }
         .navigationViewStyle(.stack)
         .id(user.id)
+        .task {
+            await loadData()
+        }
+    }
+    
+    private func loadData() async {
+        isLoading = true
+        publishedCourses = await courseService.fetchPublishedCourses()
+        isLoading = false
     }
     
     private func handleLogout() {
@@ -108,6 +137,72 @@ struct LearnerDashboardView: View {
     }
 }
 
+// MARK: - Published Course Card
+
+struct PublishedCourseCard: View {
+    let course: Course
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Course Icon
+            ZStack {
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                    .fill(AppTheme.primaryBlue.opacity(0.1))
+                    .frame(width: 60, height: 60)
+                
+                Image(systemName: "book.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(AppTheme.primaryBlue)
+            }
+            
+            // Course Info
+            VStack(alignment: .leading, spacing: 6) {
+                Text(course.title)
+                    .font(.headline)
+                    .foregroundColor(AppTheme.primaryText)
+                    .lineLimit(2)
+                
+                Text(course.description)
+                    .font(.subheadline)
+                    .foregroundColor(AppTheme.secondaryText)
+                    .lineLimit(2)
+                
+                HStack(spacing: 12) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "folder.fill")
+                            .font(.system(size: 10))
+                        Text(course.category)
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundColor(AppTheme.primaryBlue)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(AppTheme.primaryBlue.opacity(0.1))
+                    .cornerRadius(6)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "list.bullet")
+                            .font(.system(size: 10))
+                        Text("\(course.modules.count) Modules")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundColor(AppTheme.secondaryText)
+                }
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(AppTheme.secondaryText)
+        }
+        .padding(16)
+        .background(AppTheme.secondaryGroupedBackground)
+        .cornerRadius(AppTheme.cornerRadius)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+}
 // MARK: - Stat Card Component
 
 struct StatCard: View {
@@ -120,26 +215,24 @@ struct StatCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 28))
+                .font(.system(size: 24))
                 .foregroundColor(color)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(value)
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(.primary)
+                    .font(.title2.bold())
+                    .foregroundColor(AppTheme.primaryText)
                 
                 Text(title)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .font(.subheadline)
+                    .foregroundColor(AppTheme.secondaryText)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(uiColor: .secondarySystemGroupedBackground))
-                .shadow(color: color.opacity(colorScheme == .dark ? 0.3 : 0.15), radius: 15, y: 5)
-        )
+        .padding(16)
+        .background(AppTheme.secondaryGroupedBackground)
+        .cornerRadius(AppTheme.cornerRadius)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
 }
 
@@ -154,27 +247,25 @@ struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: icon)
-                .font(.system(size: 60))
-                .foregroundColor(.secondary.opacity(0.5))
+                .font(.system(size: 50))
+                .foregroundColor(AppTheme.secondaryText.opacity(0.5))
             
             VStack(spacing: 8) {
                 Text(title)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .font(.title3.weight(.semibold))
+                    .foregroundColor(AppTheme.primaryText)
                 
                 Text(message)
-                    .font(.system(size: 15))
-                    .foregroundColor(.secondary)
+                    .font(.body)
+                    .foregroundColor(AppTheme.secondaryText)
                     .multilineTextAlignment(.center)
             }
         }
         .frame(maxWidth: .infinity)
         .padding(40)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(uiColor: .secondarySystemGroupedBackground))
-                .shadow(color: .black.opacity(colorScheme == .dark ? 0.3 : 0.05), radius: 10, y: 5)
-        )
+        .background(AppTheme.secondaryGroupedBackground)
+        .cornerRadius(AppTheme.cornerRadius)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
 }
 

@@ -77,25 +77,31 @@ class CourseCreationViewModel: ObservableObject {
     
     // MARK: - Course Actions
     
+    private let courseService = CourseService()
+    
     var isCourseInfoValid: Bool {
         !newCourse.title.isEmpty && !newCourse.description.isEmpty && !newCourse.category.isEmpty
     }
     
     func saveDraft() {
-        // In a real app, this would save to backend/database with draft status
-        print("Course saved as draft: \(newCourse.title)")
-        // TODO: Implement actual draft saving logic
+        Task {
+            newCourse.status = .draft
+            newCourse.updatedAt = Date()
+            let success = await courseService.saveCourse(newCourse)
+            if success {
+                print("Draft saved successfully")
+            }
+        }
     }
     
     func sendToReview() {
-        // In a real app, this would submit course for admin review
-        print("Course sent to review: \(newCourse.title)")
-        // TODO: Implement actual review submission logic
-    }
-    
-    func publishCourse() {
-        // Here you would typically save to backend
-        newCourse.isPublished = true
-        print("Publishing course: \(newCourse.title)")
+        Task {
+            newCourse.status = .pendingReview
+            newCourse.updatedAt = Date()
+            let success = await courseService.saveCourse(newCourse)
+            if success {
+                print("Course sent to review")
+            }
+        }
     }
 }

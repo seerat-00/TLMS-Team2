@@ -19,7 +19,7 @@ struct CourseStructureView: View {
     
     var body: some View {
         ZStack {
-            Color(uiColor: .systemGroupedBackground)
+            AppTheme.groupedBackground
                 .ignoresSafeArea()
             
             ScrollView {
@@ -27,11 +27,11 @@ struct CourseStructureView: View {
                     // Header
                     VStack(alignment: .leading, spacing: 8) {
                         Text(viewModel.newCourse.title)
-                            .font(.system(size: 28, weight: .bold))
+                            .font(.largeTitle.bold())
                         
                         Text("Design your course by creating modules and lessons")
-                            .font(.callout)
-                            .foregroundColor(.secondary)
+                            .font(.body)
+                            .foregroundColor(AppTheme.secondaryText)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
@@ -56,9 +56,9 @@ struct CourseStructureView: View {
                                     .font(.subheadline.bold())
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
-                                    .background(Color.blue.opacity(0.1))
-                                    .foregroundColor(.blue)
-                                    .cornerRadius(8)
+                                    .background(AppTheme.primaryBlue.opacity(0.1))
+                                    .foregroundColor(AppTheme.primaryBlue)
+                                    .cornerRadius(AppTheme.cornerRadius)
                             }
                         }
                         .padding(.horizontal)
@@ -119,20 +119,20 @@ struct CourseStructureView: View {
                     NavigationLink(destination: CoursePreviewView(viewModel: viewModel)) {
                         HStack(spacing: 8) {
                             Text("Preview Course")
-                                .font(.system(size: 18, weight: .bold))
+                                .font(.headline)
                             Image(systemName: "eye")
-                                .font(.system(size: 16, weight: .bold))
+                                .font(.headline)
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
                         .background(
                             viewModel.newCourse.modules.isEmpty ?
-                            LinearGradient(colors: [.gray.opacity(0.5), .gray.opacity(0.5)], startPoint: .leading, endPoint: .trailing) :
-                            LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing)
+                            Color.gray.opacity(0.3) :
+                            AppTheme.primaryBlue
                         )
                         .foregroundColor(.white)
-                        .cornerRadius(16)
-                        .shadow(color: viewModel.newCourse.modules.isEmpty ? .clear : .purple.opacity(0.3), radius: 10, y: 5)
+                        .cornerRadius(AppTheme.cornerRadius)
+                        .shadow(color: viewModel.newCourse.modules.isEmpty ? .clear : AppTheme.primaryBlue.opacity(0.3), radius: 8, y: 4)
                     }
                     .disabled(viewModel.newCourse.modules.isEmpty)
                     .padding(.horizontal)

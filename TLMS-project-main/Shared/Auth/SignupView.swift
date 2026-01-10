@@ -31,22 +31,9 @@ struct SignupView: View {
     
     var body: some View {
         ZStack {
-            // Animated gradient background
-            LinearGradient(
-                colors: [
-                    Color(red: 0.15, green: 0.25, blue: 0.5),
-                    Color(red: 0.25, green: 0.15, blue: 0.4),
-                    Color(red: 0.2, green: 0.2, blue: 0.45)
-                ],
-                startPoint: animateGradient ? .topLeading : .bottomLeading,
-                endPoint: animateGradient ? .bottomTrailing : .topTrailing
-            )
-            .ignoresSafeArea()
-            .onAppear {
-                withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) {
-                    animateGradient = true
-                }
-            }
+            // Background
+            AppTheme.groupedBackground
+                .ignoresSafeArea()
             
             ScrollView {
                 VStack(spacing: 25) {
@@ -55,7 +42,7 @@ struct SignupView: View {
                         Button(action: { dismiss() }) {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 28))
-                                .foregroundColor(.white.opacity(0.8))
+                                .foregroundColor(AppTheme.secondaryText)
                         }
                         Spacer()
                     }
@@ -66,22 +53,16 @@ struct SignupView: View {
                     VStack(spacing: 12) {
                         Image(systemName: "person.crop.circle.fill.badge.plus")
                             .font(.system(size: 70))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.white, .white.opacity(0.8)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .shadow(color: .white.opacity(0.3), radius: 20)
+                            .foregroundColor(AppTheme.primaryBlue)
+                            .shadow(color: AppTheme.primaryBlue.opacity(0.3), radius: 10)
                         
                         Text("Create Account")
                             .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .foregroundColor(.white)
+                            .foregroundColor(AppTheme.primaryText)
                         
                         Text("Join our learning community")
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(AppTheme.secondaryText)
                     }
                     .padding(.bottom, 10)
                     
@@ -128,7 +109,7 @@ struct SignupView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("I am a:")
                                 .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white)
+                                .foregroundColor(AppTheme.primaryText)
                             
                             HStack(spacing: 12) {
                                 RoleButton(
@@ -158,7 +139,7 @@ struct SignupView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Upload Resume (PDF/DOC)")
                                     .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(AppTheme.primaryText)
                                 
                                 Button(action: { showDocumentPicker = true }) {
                                     HStack {
@@ -173,15 +154,13 @@ struct SignupView: View {
                                         Image(systemName: "chevron.right")
                                             .font(.system(size: 14))
                                     }
-                                    .foregroundColor(.white)
+                                    .foregroundColor(AppTheme.primaryText)
                                     .padding()
-                                    .background(
+                                    .background(AppTheme.secondaryGroupedBackground)
+                                    .cornerRadius(12)
+                                    .overlay(
                                         RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color.white.opacity(0.15))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
-                                            )
+                                            .stroke(AppTheme.secondaryText.opacity(0.2), lineWidth: 1)
                                     )
                                 }
                             }
@@ -190,22 +169,16 @@ struct SignupView: View {
                             // Educator approval notice
                             HStack(spacing: 10) {
                                 Image(systemName: "info.circle.fill")
-                                    .foregroundColor(.yellow.opacity(0.9))
+                                    .foregroundColor(AppTheme.warningOrange)
                                 
                                 Text("Educator accounts require admin approval. Upload your resume for verification.")
                                     .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(.white.opacity(0.9))
+                                    .foregroundColor(AppTheme.secondaryText)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                             .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.yellow.opacity(0.15))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color.yellow.opacity(0.3), lineWidth: 1)
-                                    )
-                            )
+                            .background(AppTheme.warningOrange.opacity(0.1))
+                            .cornerRadius(12)
                             .transition(.scale.combined(with: .opacity))
                         }
                         
@@ -213,7 +186,7 @@ struct SignupView: View {
                         if let validationError = validationError {
                             Text(validationError)
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.red.opacity(0.9))
+                                .foregroundColor(AppTheme.errorRed)
                                 .multilineTextAlignment(.center)
                         }
                         
@@ -221,7 +194,7 @@ struct SignupView: View {
                         if let errorMessage = authService.errorMessage {
                             Text(errorMessage)
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.red.opacity(0.9))
+                                .foregroundColor(AppTheme.errorRed)
                                 .multilineTextAlignment(.center)
                         }
                         
@@ -230,24 +203,22 @@ struct SignupView: View {
                             VStack(spacing: 8) {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 40))
-                                    .foregroundColor(.green)
+                                    .foregroundColor(AppTheme.successGreen)
                                 
                                 if selectedRole == .educator {
                                     Text("Account created! Pending admin approval.")
                                         .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(.white)
+                                        .foregroundColor(AppTheme.primaryText)
                                         .multilineTextAlignment(.center)
                                 } else {
                                     Text("Account created successfully!")
                                         .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(.white)
+                                        .foregroundColor(AppTheme.primaryText)
                                 }
                             }
                             .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.green.opacity(0.2))
-                            )
+                            .background(AppTheme.successGreen.opacity(0.1))
+                            .cornerRadius(12)
                             .transition(.scale.combined(with: .opacity))
                         }
                         
@@ -264,19 +235,10 @@ struct SignupView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
-                            .background(
-                                LinearGradient(
-                                    colors: [
-                                        Color(red: 0.5, green: 0.3, blue: 0.9),
-                                        Color(red: 0.4, green: 0.5, blue: 1)
-                                    ],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
+                            .background(AppTheme.primaryBlue)
                             .foregroundColor(.white)
-                            .cornerRadius(16)
-                            .shadow(color: Color(red: 0.5, green: 0.3, blue: 0.9).opacity(0.5), radius: 15, y: 8)
+                            .cornerRadius(AppTheme.cornerRadius)
+                            .shadow(color: AppTheme.primaryBlue.opacity(0.3), radius: 8, y: 4)
                         }
                         .disabled(authService.isLoading || !isFormValid)
                         .opacity((authService.isLoading || !isFormValid) ? 0.6 : 1)
@@ -286,12 +248,12 @@ struct SignupView: View {
                     // Login link
                     HStack(spacing: 4) {
                         Text("Already have an account?")
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(AppTheme.secondaryText)
                         
                         Button(action: { dismiss() }) {
                             Text("Sign In")
                                 .fontWeight(.semibold)
-                                .foregroundColor(.white)
+                                .foregroundColor(AppTheme.primaryBlue)
                         }
                     }
                     .font(.system(size: 16))
@@ -378,44 +340,30 @@ struct RoleButton: View {
             VStack(spacing: 12) {
                 Image(systemName: icon)
                     .font(.system(size: 32))
-                    .foregroundColor(isSelected ? .white : .white.opacity(0.6))
+                    .foregroundColor(isSelected ? .white : AppTheme.primaryBlue)
                 
                 Text(role.displayName)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(isSelected ? .white : .white.opacity(0.6))
+                    .foregroundColor(isSelected ? .white : AppTheme.primaryText)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 100)
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(
-                        isSelected
-                        ? LinearGradient(
-                            colors: [
-                                Color(red: 0.4, green: 0.5, blue: 1).opacity(0.4),
-                                Color(red: 0.5, green: 0.3, blue: 0.9).opacity(0.4)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                        : LinearGradient(
-                            colors: [Color.white.opacity(0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(
-                                isSelected ? Color.white.opacity(0.5) : Color.white.opacity(0.2),
-                                lineWidth: isSelected ? 2 : 1
-                            )
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                    .fill(isSelected ? AppTheme.primaryBlue : AppTheme.secondaryGroupedBackground)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                    .stroke(
+                        isSelected ? AppTheme.primaryBlue : AppTheme.primaryBlue.opacity(0.3),
+                        lineWidth: isSelected ? 0 : 1
                     )
             )
             .scaleEffect(isSelected ? 1.02 : 1.0)
             .shadow(
-                color: isSelected ? Color(red: 0.4, green: 0.5, blue: 1).opacity(0.3) : .clear,
-                radius: isSelected ? 10 : 0
+                color: isSelected ? AppTheme.primaryBlue.opacity(0.3) : Color.black.opacity(0.05),
+                radius: isSelected ? 8 : 2,
+                y: isSelected ? 4 : 1
             )
         }
     }
@@ -425,3 +373,4 @@ struct RoleButton: View {
     SignupView()
         .environmentObject(AuthService())
 }
+

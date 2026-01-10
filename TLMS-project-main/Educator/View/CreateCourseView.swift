@@ -25,36 +25,40 @@ struct CreateCourseView: View {
                     // Header
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Create Course")
-                            .font(.system(size: 28, weight: .bold))
+                            .font(.largeTitle.bold())
                         
                         Text("Start by providing the basic details for your course.")
-                            .font(.callout)
-                            .foregroundColor(.secondary)
+                            .font(.body)
+                            .foregroundColor(AppTheme.secondaryText)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
                     .padding(.top)
                     
-                    // Form Fields in Glass Container
+                    // Form Fields
                     VStack(spacing: 20) {
                         // Title
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Course Title")
                                 .font(.headline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(AppTheme.secondaryText)
                             
                             TextField("e.g. Mastering SwiftUI", text: $viewModel.newCourse.title)
-                                .font(.system(size: 18))
+                                .font(.body)
                                 .padding()
-                                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                                .cornerRadius(12)
+                                .background(AppTheme.secondaryGroupedBackground)
+                                .cornerRadius(AppTheme.cornerRadius)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                                        .stroke(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                                )
                         }
                         
                         // Category
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Category")
                                 .font(.headline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(AppTheme.secondaryText)
                             
                             Menu {
                                 ForEach(categories, id: \.self) { category in
@@ -70,20 +74,24 @@ struct CreateCourseView: View {
                             } label: {
                                 HStack {
                                     Text(viewModel.newCourse.category.isEmpty ? "Select Category" : viewModel.newCourse.category)
-                                        .foregroundColor(viewModel.newCourse.category.isEmpty ? .secondary : .primary)
+                                        .foregroundColor(viewModel.newCourse.category.isEmpty ? AppTheme.secondaryText : AppTheme.primaryText)
                                     Spacer()
                                     Image(systemName: "chevron.up.chevron.down")
                                         .font(.subheadline)
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(AppTheme.secondaryText)
                                 }
                                 .padding()
-                                .background(Color(uiColor: .secondarySystemGroupedBackground))
-                                .cornerRadius(12)
+                                .background(AppTheme.secondaryGroupedBackground)
+                                .cornerRadius(AppTheme.cornerRadius)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                                        .stroke(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                                )
                             }
                             
                             Text("Helps learners discover your course easily")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(AppTheme.secondaryText)
                                 .padding(.top, 4)
                         }
                         
@@ -91,12 +99,12 @@ struct CreateCourseView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Description")
                                 .font(.headline)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(AppTheme.secondaryText)
                             
                             ZStack(alignment: .topLeading) {
                                 if viewModel.newCourse.description.isEmpty {
                                     Text("Describe what learners will learn in this course...")
-                                        .foregroundColor(.gray.opacity(0.6))
+                                        .foregroundColor(AppTheme.secondaryText.opacity(0.6))
                                         .padding(.horizontal, 16)
                                         .padding(.vertical, 12)
                                 }
@@ -106,34 +114,33 @@ struct CreateCourseView: View {
                                     .scrollContentBackground(.hidden)
                                     .padding(8)
                             }
-                            .background(Color(uiColor: .secondarySystemGroupedBackground))
-                            .cornerRadius(12)
+                            .background(AppTheme.secondaryGroupedBackground)
+                            .cornerRadius(AppTheme.cornerRadius)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                                    .stroke(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                            )
                         }
                     }
                     .padding(24)
-                    .background(.ultraThinMaterial) // Glass Effect
-                    .cornerRadius(24)
-                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                    .background(AppTheme.secondaryGroupedBackground)
+                    .cornerRadius(AppTheme.cornerRadius)
+                    .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
                     .padding(.horizontal)
                     
                     // Continue Button
                     NavigationLink(destination: CourseStructureView(viewModel: viewModel)) {
                         HStack(spacing: 8) {
                             Text("Next")
-                                .font(.system(size: 18, weight: .bold))
+                                .font(.headline)
                             Image(systemName: "arrow.right")
-                                .font(.system(size: 16, weight: .bold))
+                                .font(.headline)
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
-                            .background(
-                                viewModel.isCourseInfoValid ?
-                                LinearGradient(colors: [.blue, .purple], startPoint: .leading, endPoint: .trailing) :
-                                LinearGradient(colors: [.gray.opacity(0.5), .gray.opacity(0.5)], startPoint: .leading, endPoint: .trailing)
-                            )
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
-                            .shadow(color: viewModel.isCourseInfoValid ? .purple.opacity(0.3) : .clear, radius: 10, y: 5)
+                        .background(viewModel.isCourseInfoValid ? AppTheme.primaryBlue : Color.gray.opacity(0.3))
+                        .foregroundColor(.white)
+                        .cornerRadius(AppTheme.cornerRadius)
                     }
                     .disabled(!viewModel.isCourseInfoValid)
                     .padding(.horizontal)
