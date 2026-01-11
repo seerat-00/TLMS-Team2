@@ -21,23 +21,9 @@ struct OTPVerificationView: View {
     
     var body: some View {
         ZStack {
-            // Animated gradient background
-            LinearGradient(
-                colors: [
-                    Color(red: 0.15, green: 0.25, blue: 0.5),
-                    Color(red: 0.25, green: 0.15, blue: 0.4),
-                    Color(red: 0.2, green: 0.2, blue: 0.45)
-                ],
-                startPoint: animateGradient ? .topLeading : .bottomLeading,
-                endPoint: animateGradient ? .bottomTrailing : .topTrailing
-            )
-            .ignoresSafeArea()
-            .onAppear {
-                withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) {
-                    animateGradient = true
-                }
-                startCountdown()
-            }
+            // Background
+            AppTheme.groupedBackground
+                .ignoresSafeArea()
             
             VStack(spacing: 30) {
                 Spacer()
@@ -45,28 +31,22 @@ struct OTPVerificationView: View {
                 // Icon
                 Image(systemName: "envelope.badge.shield.half.filled")
                     .font(.system(size: 70))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.white, .white.opacity(0.8)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .shadow(color: .white.opacity(0.3), radius: 20)
+                    .foregroundStyle(AppTheme.primaryBlue)
+                    .shadow(color: AppTheme.primaryBlue.opacity(0.3), radius: 20)
                 
                 // Title
                 VStack(spacing: 12) {
                     Text("Enter Verification Code")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(AppTheme.primaryText)
                     
                     Text("We sent an 8-digit code to")
                         .font(.system(size: 15))
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(AppTheme.secondaryText)
                     
                     Text(email)
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(AppTheme.primaryText)
                 }
                 
                 
@@ -104,14 +84,14 @@ struct OTPVerificationView: View {
                     
                     Text("\(otpCode.count)/8")
                         .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
+                        .foregroundColor(AppTheme.secondaryText.opacity(0.6))
                 }
                 
                 // Error message
                 if let errorMessage = authService.errorMessage {
                     Text(errorMessage)
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.red.opacity(0.9))
+                        .foregroundColor(AppTheme.errorRed)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                 }
@@ -120,7 +100,7 @@ struct OTPVerificationView: View {
                 VStack(spacing: 12) {
                     Text("Didn't receive the code?")
                         .font(.system(size: 15))
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(AppTheme.secondaryText)
                     
                     Button(action: resendCode) {
                         HStack {
@@ -128,7 +108,7 @@ struct OTPVerificationView: View {
                             Text(canResend ? "Resend Code" : "Resend in \(resendCountdown)s")
                                 .font(.system(size: 16, weight: .semibold))
                         }
-                        .foregroundColor(canResend ? .white : .white.opacity(0.5))
+                        .foregroundColor(canResend ? AppTheme.primaryBlue : AppTheme.secondaryText.opacity(0.5))
                     }
                     .disabled(!canResend || authService.isLoading)
                 }
@@ -146,19 +126,10 @@ struct OTPVerificationView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(
-                        LinearGradient(
-                            colors: [
-                                Color(red: 0.5, green: 0.3, blue: 0.9),
-                                Color(red: 0.4, green: 0.5, blue: 1)
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .background(AppTheme.primaryBlue)
                     .foregroundColor(.white)
-                    .cornerRadius(16)
-                    .shadow(color: Color(red: 0.5, green: 0.3, blue: 0.9).opacity(0.5), radius: 15, y: 8)
+                    .cornerRadius(AppTheme.cornerRadius)
+                    .shadow(color: AppTheme.primaryBlue.opacity(0.3), radius: 8, y: 4)
                 }
                 .disabled(otpCode.count != 8 || authService.isLoading)
                 .opacity((otpCode.count != 8 || authService.isLoading) ? 0.6 : 1)
@@ -168,7 +139,7 @@ struct OTPVerificationView: View {
                 Button(action: { dismiss() }) {
                     Text("Use different email")
                         .font(.system(size: 16))
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundColor(AppTheme.secondaryText)
                 }
                 
                 Spacer()
@@ -228,19 +199,20 @@ struct OTPDigitBox: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.15))
+                .fill(AppTheme.secondaryGroupedBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
-                            isFocused ? Color.blue.opacity(0.8) : Color.white.opacity(0.3),
+                            isFocused ? AppTheme.primaryBlue : AppTheme.secondaryText.opacity(0.3),
                             lineWidth: isFocused ? 2 : 1
                         )
                 )
                 .frame(width: 42, height: 56)
+                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
             
             Text(digit)
                 .font(.system(size: 28, weight: .bold, design: .monospaced))
-                .foregroundColor(.white)
+                .foregroundColor(AppTheme.primaryText)
         }
         .animation(.easeInOut(duration: 0.2), value: isFocused)
     }

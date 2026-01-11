@@ -164,4 +164,90 @@ class CourseService: ObservableObject {
             return false
         }
     }
+    // MARK: - Enrollment
+
+    func enrollInCourse(courseID: UUID, userID: UUID) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            let enrollment = Enrollment(userID: userID, courseID: courseID)
+            try await supabase
+                .from("enrollments")
+                .insert(enrollment)
+                .execute()
+            return true
+        } catch {
+            // Check for duplicate key error (already enrolled)
+            if error.localizedDescription.contains("duplicate key") {
+                 errorMessage = "You are already enrolled in this course."
+            } else {
+                errorMessage = "Failed to enroll: \(error.localizedDescription)"
+            }
+            return false
+        }
+    }
+    
+    func fetchEnrolledCourses(userID: UUID) async -> [Course] {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            // 1. Get enrollments for user
+            let enrollments: [Enrollment] = try await supabase
+                .from("enrollments")
+                .select()
+                .eq("user_id", value: userID.uuidString)
+                .execute()
+                .value
+            
+            let courseIDs = enrollments.map { $0.courseID }
+            
+            if courseIDs.isEmpty {
+                return []
+            }
+            
+            // 2. Fetch courses matching IDs
+            // Supabase "in" filter expects a comma-separated string of values in parens? 
+            // Or simpler to just fetch all and filter client side if list is small?
+            // Better: Use `in` filter correctly.
+            // Supabase Swift client usage for `in`: .in("id", value: [ids])
+            
+            let courses: [Course] = try await supabase
+                .from("courses")
+                .select()
+                .in("id", value: courseIDs.map { $0.uuidString })
+                .execute()
+                .value
+            
+            return courses
+        } catch {
+            errorMessage = "Failed to fetch enrolled courses: \(error.localizedDescription)"
+            return []
+        }
+    }
+}
+
+// Helper model for enrollment
+struct Enrollment: Codable {
+    var id: UUID?
+    var userID: UUID
+    var courseID: UUID
+    var enrolledAt: Date?
+    var progress: Double?
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userID = "user_id"
+        case courseID = "course_id"
+        case enrolledAt = "enrolled_at"
+        case progress
+    }
+    
+    init(userID: UUID, courseID: UUID) {
+        self.userID = userID
+        self.courseID = courseID
+    }
 }
