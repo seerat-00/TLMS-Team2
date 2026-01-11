@@ -58,6 +58,11 @@ struct LearnerDashboardView: View {
                             )
                         }
                         .padding(.horizontal)
+                        
+                        // Recommendations Section
+                        RecommendationListView(userId: user.id)
+                        
+                        // Course sections
 
                         // Course section
                         VStack(alignment: .leading, spacing: 16) {
