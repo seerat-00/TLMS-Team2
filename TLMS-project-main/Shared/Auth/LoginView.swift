@@ -13,9 +13,21 @@ struct LoginView: View {
     @State private var password = ""
     @State private var showPassword = false
     @State private var showSignup = false
+    @State private var showOTPVerification = false
     @State private var animateGradient = false
     
     var body: some View {
+        ZStack {
+            if showSignup {
+                SignupView()
+                    .environmentObject(authService)
+            } else {
+                loginScreen
+            }
+        }
+    }
+    
+    private var loginScreen: some View {
         ZStack {
             // Animated gradient background
             LinearGradient(
@@ -83,6 +95,16 @@ struct LoginView: View {
                             showPassword: $showPassword
                         )
                         
+                        // 2FA Info message
+                        HStack(spacing: 8) {
+                            Image(systemName: "lock.shield.fill")
+                                .foregroundColor(.green.opacity(0.8))
+                            Text("2-Step Verification: Code will be sent to your email")
+                                .font(.system(size: 12))
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                        .padding(.horizontal)
+                        
                         // Error message
                         if let errorMessage = authService.errorMessage {
                             Text(errorMessage)
@@ -93,7 +115,10 @@ struct LoginView: View {
                         }
                         
                         // Login button
-                        Button(action: handleLogin) {
+                        Button(action: {
+                            print("🚀 BUTTON PRESSED!")
+                            handleLogin()
+                        }) {
                             HStack {
                                 if authService.isLoading {
                                     ProgressView()
@@ -142,18 +167,18 @@ struct LoginView: View {
                 }
             }
         }
-        .fullScreenCover(isPresented: $showSignup) {
-            SignupView()
-                .environmentObject(authService)
-        }
     }
     
     private func handleLogin() {
         Task {
-            let success = await authService.signIn(email: email, password: password)
-            if success {
-                // Navigation handled by AuthenticationView
-            }
+            print("� Starting 2FA login...")
+            
+            // Store password for later verification
+            await authService.setPendingPassword(password)
+            
+            // Send OTP - AuthenticationView will show OTP screen automatically
+            let success = await authService.sendOTP(email: email)
+            print("📧 OTP sent: \(success)")
         }
     }
 }
