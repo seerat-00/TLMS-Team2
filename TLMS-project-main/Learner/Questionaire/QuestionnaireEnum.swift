@@ -49,4 +49,9 @@ enum AuthEntryPoint {
     case login
 }
 
+enum QuestionnaireMode {
+    case onboarding
+    case edit
+}
+
 

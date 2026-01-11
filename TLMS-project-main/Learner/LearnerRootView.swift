@@ -2,8 +2,6 @@
 //  LearnerRootView.swift
 //  TLMS-project-main
 //
-//  Created by Chehak on 08/01/26.
-//
 
 import SwiftUI
 
@@ -15,24 +13,41 @@ struct LearnerRootView: View {
     init(user: User) {
         self.user = user
         _questionnaireVM = StateObject(
-            wrappedValue: QuestionnaireViewModel(userId: user.id.uuidString)
+            wrappedValue: QuestionnaireViewModel(
+                userId: user.id.uuidString
+            )
         )
     }
 
     var body: some View {
-        Group {
-            // 🆕 Signup → always questionnaire
-            if authService.entryPoint == .signup {
-                QuestionnaireContainerView(viewModel: questionnaireVM)
+        NavigationStack {
+            Group {
 
-            // 🔐 Login + completed → dashboard
-            } else if questionnaireVM.response.isCompleted {
-                LearnerDashboardView(user: user)
+                // ⏳ Loading
+                if questionnaireVM.isLoading {
+                    ProgressView()
+                        .scaleEffect(1.2)
 
-            // 🔐 Login + not completed → questionnaire
-            } else {
-                QuestionnaireContainerView(viewModel: questionnaireVM)
+                // 🆕 Signup → Questionnaire
+                } else if authService.entryPoint == .signup {
+                    QuestionnaireContainerView(
+                        viewModel: questionnaireVM,
+                        mode: .onboarding
+                    )
+
+                // 🔐 Completed → Dashboard
+                } else if questionnaireVM.response.isCompleted {
+                    LearnerDashboardView(user: user)
+
+                // 🔐 Login but incomplete → Questionnaire
+                } else {
+                    QuestionnaireContainerView(
+                        viewModel: questionnaireVM,
+                        mode: .onboarding
+                    )
+                }
             }
         }
+        .environmentObject(authService)
     }
 }

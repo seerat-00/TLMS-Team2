@@ -4,6 +4,7 @@
 //
 //  Created by Chehak on 08/01/26.
 //
+
 import Foundation
 import SwiftUI
 import Combine
@@ -14,8 +15,10 @@ class QuestionnaireViewModel: ObservableObject {
     @Published var stepIndex: Int = 0
     @Published var response: QuestionnaireResponse
 
-    private let service = QuestionnaireService()
+    // ✅ NEW
+    @Published var isLoading: Bool = true
 
+    private let service = QuestionnaireService()
     let totalSteps = 5
 
     var hasStartedAnswering: Bool {
@@ -30,6 +33,8 @@ class QuestionnaireViewModel: ObservableObject {
         self.response = QuestionnaireResponse(userId: userId)
 
         Task {
+            defer { isLoading = false }   // ✅ always unset loading
+
             if let saved = try? await service.fetch(userId: userId) {
                 self.response = saved
             }

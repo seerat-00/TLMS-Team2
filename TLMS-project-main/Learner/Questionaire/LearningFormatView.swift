@@ -9,7 +9,10 @@ import SwiftUI
 
 struct LearningFormatView: View {
     @ObservedObject var viewModel: QuestionnaireViewModel
-    @EnvironmentObject var authService: AuthService
+    let mode: QuestionnaireMode
+
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var authService: AuthService   // ✅ REQUIRED
 
     var body: some View {
         List {
@@ -20,6 +23,7 @@ struct LearningFormatView: View {
                         Spacer()
                         if viewModel.response.learningFormats.contains(format) {
                             Image(systemName: "checkmark")
+                                .foregroundColor(.accentColor)
                         }
                     }
                     .contentShape(Rectangle())
@@ -34,15 +38,40 @@ struct LearningFormatView: View {
             }
 
             Section {
-                Button("Finish") {
-                    Task {
-                        await viewModel.completeQuestionnaire()
-                        authService.entryPoint = nil   // ✅ reset here
+                HStack {
+                    Spacer()
+
+                    Button(buttonTitle) {
+                        Task {
+                            await viewModel.completeQuestionnaire()
+
+                            switch mode {
+                            case .edit:
+                                dismiss()                      // edit → pop
+
+                            case .onboarding:
+                                authService.entryPoint = nil   // onboarding → dashboard
+                            }
+                        }
                     }
+                    .font(.headline)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color.accentColor)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                    .disabled(viewModel.response.learningFormats.isEmpty)
+
+                    Spacer()
                 }
-                .disabled(viewModel.response.learningFormats.isEmpty)
             }
         }
         .navigationTitle("Learning Format")
+        .navigationBarTitleDisplayMode(.large)
+    }
+
+    private var buttonTitle: String {
+        mode == .edit ? "Save" : "Finish"
     }
 }
+
