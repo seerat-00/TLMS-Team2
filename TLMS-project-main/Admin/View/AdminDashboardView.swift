@@ -11,11 +11,13 @@ struct AdminDashboardView: View {
     let user: User
     @EnvironmentObject var authService: AuthService
     @State private var pendingEducators: [User] = []
+    @State private var pendingCourses: [Course] = []
     @State private var allUsers: [User] = []
     @State private var isLoading = false
     @State private var selectedTab = 0
     @State private var showProfile = false
     @Environment(\.colorScheme) var colorScheme
+    @StateObject private var courseService = CourseService()
     
     var body: some View {
         NavigationView {
@@ -28,8 +30,8 @@ struct AdminDashboardView: View {
                     // Custom tab selector
                     HStack(spacing: 0) {
                         TabButton(
-                            title: "Pending",
-                            icon: "clock.fill",
+                            title: "Educators",
+                            icon: "person.badge.shield.checkmark.fill",
                             isSelected: selectedTab == 0,
                             badge: pendingEducators.count
                         ) {
@@ -39,24 +41,38 @@ struct AdminDashboardView: View {
                         }
                         
                         TabButton(
-                            title: "All Users",
-                            icon: "person.3.fill",
+                            title: "Courses",
+                            icon: "book.fill",
                             isSelected: selectedTab == 1,
-                            badge: nil
+                            badge: pendingCourses.count
                         ) {
                             withAnimation(.spring(response: 0.3)) {
                                 selectedTab = 1
                             }
                         }
+                        
+                        TabButton(
+                            title: "Users",
+                            icon: "person.3.fill",
+                            isSelected: selectedTab == 2,
+                            badge: nil
+                        ) {
+                            withAnimation(.spring(response: 0.3)) {
+                                selectedTab = 2
+                            }
+                        }
                     }
                     .padding(.horizontal)
                     .padding(.top, 20)
+                    .background(AppTheme.groupedBackground)
                     
                     // Content
                     ScrollView {
                         VStack(spacing: 20) {
                             if selectedTab == 0 {
                                 pendingEducatorsView
+                            } else if selectedTab == 1 {
+                                pendingCoursesView
                             } else {
                                 allUsersView
                             }
@@ -85,8 +101,8 @@ struct AdminDashboardView: View {
                         }
                     } label: {
                         Image(systemName: "ellipsis.circle.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(Color(red: 0.4, green: 0.5, blue: 1))
+                        .font(.system(size: 24))
+                        .foregroundColor(AppTheme.primaryBlue)
                     }
                 }
             }
@@ -109,8 +125,8 @@ struct AdminDashboardView: View {
             } else if pendingEducators.isEmpty {
                 EmptyStateView(
                     icon: "checkmark.circle.fill",
-                    title: "All caught up!",
-                    message: "No pending educator approvals at the moment"
+                    title: "No pending educators",
+                    message: "All educator requests have been reviewed"
                 )
             } else {
                 ForEach(pendingEducators) { educator in
@@ -119,6 +135,35 @@ struct AdminDashboardView: View {
                     } onReject: {
                         await rejectEducator(educator)
                     }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Pending Courses View
+    
+    private var pendingCoursesView: some View {
+        VStack(spacing: 16) {
+            if isLoading {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .padding(40)
+            } else if pendingCourses.isEmpty {
+                EmptyStateView(
+                    icon: "book.closed.fill",
+                    title: "No pending courses",
+                    message: "All course submissions have been reviewed"
+                )
+            } else {
+                ForEach(pendingCourses) { course in
+                    NavigationLink(destination: AdminCourseDetailView(course: course, onStatusChange: {
+                        Task {
+                            await loadData()
+                        }
+                    })) {
+                        PendingCourseCard(course: course)
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
             }
         }
@@ -152,9 +197,11 @@ struct AdminDashboardView: View {
         isLoading = true
         async let pending = authService.fetchPendingEducators()
         async let all = authService.fetchAllUsers()
+        async let courses = courseService.fetchPendingCourses()
         
         pendingEducators = await pending
         allUsers = await all
+        pendingCourses = await courses
         isLoading = false
     }
     
@@ -187,6 +234,52 @@ struct AdminDashboardView: View {
     }
 }
 
+// MARK: - Pending Course Card
+
+struct PendingCourseCard: View {
+    let course: Course
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Icon
+            ZStack {
+                RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                    .fill(AppTheme.primaryBlue.opacity(0.1))
+                    .frame(width: 50, height: 50)
+                
+                Image(systemName: "book.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(AppTheme.primaryBlue)
+            }
+            
+            // Info
+            VStack(alignment: .leading, spacing: 4) {
+                Text(course.title)
+                    .font(.headline)
+                    .foregroundColor(AppTheme.primaryText)
+                
+                Text(course.category)
+                    .font(.caption.weight(.medium))
+                    .foregroundColor(AppTheme.primaryBlue)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(AppTheme.primaryBlue.opacity(0.1))
+                    .cornerRadius(6)
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .foregroundColor(AppTheme.secondaryText)
+        }
+        .padding(16)
+        .background(AppTheme.secondaryGroupedBackground)
+        .cornerRadius(AppTheme.cornerRadius)
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+}
+
 // MARK: - Tab Button Component
 
 struct TabButton: View {
@@ -208,18 +301,18 @@ struct TabButton: View {
                     
                     if let badge = badge, badge > 0 {
                         Text("\(badge)")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.caption.bold())
                             .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color.red)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(AppTheme.warningOrange)
                             .clipShape(Capsule())
                     }
                 }
-                .foregroundColor(isSelected ? Color(red: 0.4, green: 0.5, blue: 1) : .secondary)
+                .foregroundColor(isSelected ? AppTheme.primaryBlue : AppTheme.secondaryText)
                 
                 Rectangle()
-                    .fill(isSelected ? Color(red: 0.4, green: 0.5, blue: 1) : Color.clear)
+                    .fill(isSelected ? AppTheme.primaryBlue : Color.clear)
                     .frame(height: 3)
             }
         }
