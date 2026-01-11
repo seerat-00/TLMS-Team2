@@ -14,14 +14,46 @@ class CourseCreationViewModel: ObservableObject {
     
     // Navigation state
     @Published var navigationPath = NavigationPath()
+    @Published var shouldDismissToRoot = false
+    @Published var saveSuccessMessage: String?
+    @Published var isLoadingCourse = false
     
-    init(educatorID: UUID) {
-        self.newCourse = Course(
-            title: "",
-            description: "",
-            category: "",
-            educatorID: educatorID 
-        )
+    private let courseService = CourseService()
+    
+    init(educatorID: UUID, existingCourse: DashboardCourse? = nil) {
+        if let existingCourse = existingCourse {
+            // Initialize with placeholder, will load full course data
+            self.newCourse = Course(
+                id: existingCourse.id,
+                title: existingCourse.title,
+                description: "",
+                category: "",
+                educatorID: educatorID
+            )
+            
+            // Load full course data asynchronously
+            Task {
+                await loadCourse(courseID: existingCourse.id)
+            }
+        } else {
+            // Creating new course
+            self.newCourse = Course(
+                title: "",
+                description: "",
+                category: "",
+                educatorID: educatorID 
+            )
+        }
+    }
+    
+    // MARK: - Load Course
+    
+    func loadCourse(courseID: UUID) async {
+        isLoadingCourse = true
+        if let course = await courseService.fetchCourse(by: courseID) {
+            self.newCourse = course
+        }
+        isLoadingCourse = false
     }
     
     // MARK: - Module Management
@@ -77,31 +109,28 @@ class CourseCreationViewModel: ObservableObject {
     
     // MARK: - Course Actions
     
-    private let courseService = CourseService()
     
     var isCourseInfoValid: Bool {
         !newCourse.title.isEmpty && !newCourse.description.isEmpty && !newCourse.category.isEmpty
     }
     
-    func saveDraft() {
-        Task {
-            newCourse.status = .draft
-            newCourse.updatedAt = Date()
-            let success = await courseService.saveCourse(newCourse)
-            if success {
-                print("Draft saved successfully")
-            }
+    func saveDraft() async {
+        newCourse.status = .draft
+        newCourse.updatedAt = Date()
+        let success = await courseService.saveCourse(newCourse)
+        if success {
+            saveSuccessMessage = "Course saved as draft"
+            shouldDismissToRoot = true
         }
     }
     
-    func sendToReview() {
-        Task {
-            newCourse.status = .pendingReview
-            newCourse.updatedAt = Date()
-            let success = await courseService.saveCourse(newCourse)
-            if success {
-                print("Course sent to review")
-            }
+    func sendToReview() async {
+        newCourse.status = .pendingReview
+        newCourse.updatedAt = Date()
+        let success = await courseService.saveCourse(newCourse)
+        if success {
+            saveSuccessMessage = "Course sent for review"
+            shouldDismissToRoot = true
         }
     }
 }

@@ -12,6 +12,8 @@ struct EducatorDashboardView: View {
     @EnvironmentObject var authService: AuthService
     @StateObject private var viewModel = EducatorDashboardViewModel()
     @State private var showProfile = false
+    @State private var showCreateCourse = false
+    @State private var courseToEdit: DashboardCourse? = nil
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
@@ -89,6 +91,23 @@ struct EducatorDashboardView: View {
         .task {
             await viewModel.loadData(educatorID: user.id)
         }
+        .fullScreenCover(isPresented: $showCreateCourse, onDismiss: {
+            // Refresh dashboard when course creation is dismissed
+            courseToEdit = nil
+            Task {
+                await viewModel.loadData(educatorID: user.id)
+            }
+        }) {
+            NavigationView {
+                if let courseToEdit = courseToEdit {
+                    // Editing existing draft course
+                    CreateCourseView(viewModel: CourseCreationViewModel(educatorID: user.id, existingCourse: courseToEdit))
+                } else {
+                    // Creating new course
+                    CreateCourseView(viewModel: CourseCreationViewModel(educatorID: user.id))
+                }
+            }
+        }
     }
     
     // MARK: - Header Section
@@ -158,18 +177,91 @@ struct EducatorDashboardView: View {
     
     private var coursesSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Your Courses")
-                .font(.title2.bold())
-                .foregroundColor(AppTheme.primaryText)
-            
-            if viewModel.recentCourses.isEmpty {
-                EmptyCoursesCard()
-            } else {
+            // Draft Courses Section
+            if !viewModel.draftCourses.isEmpty {
+                Text("Drafts")
+                    .font(.title2.bold())
+                    .foregroundColor(AppTheme.primaryText)
+                
                 LazyVStack(spacing: 16) {
-                    ForEach(viewModel.recentCourses) { course in
-                        CourseGlassCard(course: course)
+                    ForEach(viewModel.draftCourses) { course in
+                        CourseGlassCard(course: course, onDelete: {
+                            viewModel.confirmDelete(course)
+                        }, onEdit: {
+                            courseToEdit = course
+                            showCreateCourse = true
+                        })
                     }
                 }
+            }
+            
+            // Other Courses Section
+            if !viewModel.otherCourses.isEmpty {
+                Text(viewModel.draftCourses.isEmpty ? "Your Courses" : "Published & Under Review")
+                    .font(.title2.bold())
+                    .foregroundColor(AppTheme.primaryText)
+                    .padding(.top, viewModel.draftCourses.isEmpty ? 0 : 8)
+                
+                LazyVStack(spacing: 16) {
+                    ForEach(viewModel.otherCourses) { course in
+                        // Show delete button for pending review courses (can be retracted)
+                        // Show unpublish button for published courses
+                        if course.status == .pendingReview {
+                            CourseGlassCard(course: course, onDelete: {
+                                viewModel.confirmDelete(course)
+                            })
+                        } else if course.status == .published {
+                            CourseGlassCard(course: course, onUnpublish: {
+                                viewModel.confirmUnpublish(course)
+                            })
+                        } else {
+                            CourseGlassCard(course: course)
+                        }
+                    }
+                }
+            }
+            
+            // Empty state
+            if viewModel.recentCourses.isEmpty {
+                EmptyCoursesCard()
+            }
+        }
+        .alert(viewModel.courseToDelete?.status == .pendingReview ? "Retract Course" : "Delete Course", isPresented: $viewModel.showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {
+                viewModel.courseToDelete = nil
+            }
+            Button(viewModel.courseToDelete?.status == .pendingReview ? "Retract" : "Delete", role: .destructive) {
+                if let course = viewModel.courseToDelete {
+                    Task {
+                        await viewModel.deleteCourse(course)
+                        viewModel.courseToDelete = nil
+                    }
+                }
+            }
+        } message: {
+            if let course = viewModel.courseToDelete {
+                if course.status == .pendingReview {
+                    Text("Are you sure you want to retract '\(course.title)' from review? This will permanently delete the course.")
+                } else {
+                    Text("Are you sure you want to delete '\(course.title)'? This action cannot be undone.")
+                }
+            }
+        }
+        .alert("Unpublish Course", isPresented: $viewModel.showUnpublishConfirmation) {
+            Button("Cancel", role: .cancel) {
+                viewModel.courseToUnpublish = nil
+            }
+            Button("Unpublish", role: .destructive) {
+                if let course = viewModel.courseToUnpublish {
+                    Task {
+                        await viewModel.unpublishCourse(course)
+                        viewModel.courseToUnpublish = nil
+                    }
+                }
+            }
+        } message: {
+            if let course = viewModel.courseToUnpublish {
+                Text("Are you sure you want to unpublish '\(course.title)'? This will move the course back to drafts and make it unavailable to learners.")
             }
         }
     }
@@ -177,7 +269,9 @@ struct EducatorDashboardView: View {
     // MARK: - Create Course Button
     
     private var createCourseButton: some View {
-        NavigationLink(destination: CreateCourseView(viewModel: CourseCreationViewModel(educatorID: user.id))) {
+        Button(action: {
+            showCreateCourse = true
+        }) {
             HStack(spacing: 12) {
                 Image(systemName: "plus.circle.fill")
                     .font(.title3)
@@ -239,6 +333,9 @@ struct StatGlassCard: View {
 
 struct CourseGlassCard: View {
     let course: DashboardCourse
+    var onDelete: (() -> Void)? = nil
+    var onEdit: (() -> Void)? = nil
+    var onUnpublish: (() -> Void)? = nil
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
@@ -290,9 +387,48 @@ struct CourseGlassCard: View {
             
             Spacer()
             
-            Image(systemName: "chevron.right")
-                .font(.subheadline.weight(.semibold))
-                .foregroundColor(AppTheme.secondaryText)
+            // Action buttons
+            HStack(spacing: 12) {
+                // Edit button (arrow icon) for drafts
+                if let onEdit = onEdit {
+                    Button(action: onEdit) {
+                        Image(systemName: "arrow.right.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(AppTheme.primaryBlue)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                // Unpublish button for published courses
+                if let onUnpublish = onUnpublish {
+                    Button(action: onUnpublish) {
+                        Image(systemName: "arrow.uturn.down.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.orange)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                // Delete button
+                if let onDelete = onDelete {
+                    Button(action: onDelete) {
+                        Image(systemName: "trash")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.red)
+                            .frame(width: 32, height: 32)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                // Chevron for courses without actions
+                if onEdit == nil && onDelete == nil && onUnpublish == nil {
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(AppTheme.secondaryText)
+                }
+            }
         }
         .padding(16)
         .background(AppTheme.secondaryGroupedBackground)

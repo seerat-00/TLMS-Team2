@@ -150,6 +150,34 @@ struct CreateCourseView: View {
         }
         .navigationTitle("Create Course")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: {
+                    dismiss()
+                }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                            .font(.body.weight(.semibold))
+                        Text("Back")
+                            .font(.body)
+                    }
+                    .foregroundColor(AppTheme.primaryBlue)
+                }
+            }
+        }
+        .overlay {
+            if viewModel.isLoadingCourse {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                    
+                    ProgressView("Loading course...")
+                        .padding()
+                        .background(AppTheme.secondaryGroupedBackground)
+                        .cornerRadius(AppTheme.cornerRadius)
+                }
+            }
+        }
     }
 }
 

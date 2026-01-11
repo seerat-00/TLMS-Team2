@@ -87,6 +87,25 @@ class CourseService: ObservableObject {
         }
     }
     
+    func fetchCourse(by courseID: UUID) async -> Course? {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            let courses: [Course] = try await supabase
+                .from("courses")
+                .select()
+                .eq("id", value: courseID.uuidString)
+                .execute()
+                .value
+            return courses.first
+        } catch {
+            errorMessage = "Failed to fetch course: \(error.localizedDescription)"
+            return nil
+        }
+    }
+    
     // MARK: - Save/Update
     
     func saveCourse(_ course: Course) async -> Bool {
@@ -122,6 +141,26 @@ class CourseService: ObservableObject {
             return true
         } catch {
             errorMessage = "Failed to update status: \(error.localizedDescription)"
+            return false
+        }
+    }
+    
+    // MARK: - Delete Course
+    
+    func deleteCourse(courseID: UUID) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            try await supabase
+                .from("courses")
+                .delete()
+                .eq("id", value: courseID.uuidString)
+                .execute()
+            return true
+        } catch {
+            errorMessage = "Failed to delete course: \(error.localizedDescription)"
             return false
         }
     }
