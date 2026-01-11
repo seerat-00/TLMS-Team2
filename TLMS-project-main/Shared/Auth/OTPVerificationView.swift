@@ -89,7 +89,7 @@ struct OTPVerificationView: View {
                         .focused($isCodeFieldFocused)
                         .opacity(0)
                         .frame(height: 1)
-                        .onChange(of: otpCode) { newValue in
+                        .onChange(of: otpCode) { oldValue, newValue in
                             // Limit to 8 digits
                             if newValue.count > 8 {
                                 otpCode = String(newValue.prefix(8))

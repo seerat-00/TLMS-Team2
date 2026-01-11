@@ -36,7 +36,7 @@ struct RecommendationListView: View {
                         }
                         .padding(.horizontal)
                     }
-                } else if let error = viewModel.errorMessage {
+                } else if let _ = viewModel.errorMessage {
                     // Error State (Fail silently or show message)
                     VStack(spacing: 8) {
                         Image(systemName: "exclamationmark.triangle")

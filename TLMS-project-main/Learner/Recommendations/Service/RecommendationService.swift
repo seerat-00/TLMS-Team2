@@ -45,8 +45,8 @@ class RecommendationService {
             // Filter by interest (Category)
             if !prefs.interests.isEmpty {
                 // Supabase 'in' filter expects comma separated string for some clients, or array.
-                // For swift client: .in("column", value: [values])
-                 query = query.in("category", value: prefs.interests)
+                // For swift client: .in("column", values: [values])
+                 query = query.in("category", values: prefs.interests)
             }
             
             // Filter by skill level?

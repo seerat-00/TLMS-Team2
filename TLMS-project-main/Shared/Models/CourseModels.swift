@@ -42,6 +42,27 @@ enum CourseStatus: String, Codable, CaseIterable {
     }
 }
 
+enum CourseLevel: String, Codable, CaseIterable {
+    case beginner = "Beginner"
+    case intermediate = "Intermediate"
+    case advanced = "Advanced"
+    case allLevels = "All Levels"
+    
+    // Helper to match Supabase values which might be lowercase or snake_case
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let stringValue = try container.decode(String.self)
+        
+        switch stringValue.lowercased().replacingOccurrences(of: "_", with: " ") {
+        case "beginner": self = .beginner
+        case "intermediate": self = .intermediate
+        case "advanced": self = .advanced
+        case "all levels", "all_levels": self = .allLevels
+        default: self = .beginner // Fallback
+        }
+    }
+}
+
 struct Course: Identifiable, Codable {
     var id: UUID = UUID()
     var title: String
@@ -51,8 +72,15 @@ struct Course: Identifiable, Codable {
     var modules: [Module] = []
     var status: CourseStatus = .draft
     var courseCoverUrl: String?
+    var level: CourseLevel = .beginner
     var createdAt: Date = Date()
     var updatedAt: Date = Date()
+    
+    // Convenience property for backward compatibility
+    var thumbnailUrl: String? {
+        get { courseCoverUrl }
+        set { courseCoverUrl = newValue }
+    }
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -63,12 +91,13 @@ struct Course: Identifiable, Codable {
         case modules
         case status
         case courseCoverUrl = "course_cover_url"
+        case level
         case createdAt = "created_at"
         case updatedAt = "updated_at"
     }
     
     // Default init
-    init(id: UUID = UUID(), title: String, description: String, category: String, educatorID: UUID, modules: [Module] = [], status: CourseStatus = .draft, courseCoverUrl: String? = nil, createdAt: Date = Date(), updatedAt: Date = Date()) {
+    init(id: UUID = UUID(), title: String, description: String, category: String, educatorID: UUID, modules: [Module] = [], status: CourseStatus = .draft, courseCoverUrl: String? = nil, level: CourseLevel = .beginner, createdAt: Date = Date(), updatedAt: Date = Date()) {
         self.id = id
         self.title = title
         self.description = description
@@ -77,6 +106,7 @@ struct Course: Identifiable, Codable {
         self.modules = modules
         self.status = status
         self.courseCoverUrl = courseCoverUrl
+        self.level = level
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -92,6 +122,7 @@ struct Course: Identifiable, Codable {
         educatorID = try container.decode(UUID.self, forKey: .educatorID)
         status = try container.decode(CourseStatus.self, forKey: .status)
         courseCoverUrl = try container.decodeIfPresent(String.self, forKey: .courseCoverUrl)
+        level = try container.decodeIfPresent(CourseLevel.self, forKey: .level) ?? .beginner
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)
         

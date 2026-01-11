@@ -135,7 +135,7 @@ struct LoginView: View {
             print("� Starting 2FA login...")
             
             // Store password for later verification
-            await authService.setPendingPassword(password)
+            authService.setPendingPassword(password)
             
             // Send OTP - AuthenticationView will show OTP screen automatically
             let success = await authService.sendOTP(email: email)
