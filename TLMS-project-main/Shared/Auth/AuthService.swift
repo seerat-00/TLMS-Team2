@@ -37,14 +37,8 @@ class AuthService: ObservableObject {
             """)
         }
         
-        guard let url = URL(string: SupabaseConfig.supabaseURL) else {
-            fatalError("Invalid Supabase URL: \(SupabaseConfig.supabaseURL)")
-        }
-        
-        self.supabase = SupabaseClient(
-            supabaseURL: url,
-            supabaseKey: SupabaseConfig.supabaseAnonKey
-        )
+        // Use shared client
+        self.supabase = SupabaseManager.shared.client
         
         // Check for existing session
         Task {
@@ -191,7 +185,7 @@ class AuthService: ObservableObject {
         defer { isLoading = false }
         
         do {
-            let session = try await supabase.auth.signIn(
+            let _ = try await supabase.auth.signIn(
                 email: email,
                 password: password
             )

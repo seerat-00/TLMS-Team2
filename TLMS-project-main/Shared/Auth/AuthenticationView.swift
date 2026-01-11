@@ -15,16 +15,16 @@ struct AuthenticationView: View {
             if authService.isLoading {
                 // Loading state
                 ZStack {
-                    Color(red: 0.1, green: 0.2, blue: 0.45)
+                    AppTheme.groupedBackground
                         .ignoresSafeArea()
                     
                     VStack(spacing: 20) {
                         ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .progressViewStyle(CircularProgressViewStyle(tint: AppTheme.primaryBlue))
                             .scaleEffect(1.5)
                         
                         Text("Loading...")
-                            .foregroundColor(.white)
+                            .foregroundColor(AppTheme.secondaryText)
                             .font(.system(size: 18, weight: .medium))
                     }
                 }
