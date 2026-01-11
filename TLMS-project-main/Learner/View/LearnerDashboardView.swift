@@ -284,60 +284,61 @@ struct EmptyStateView: View {
     let title: String
     let message: String
     @Environment(\.colorScheme) var colorScheme
-
+    
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: icon)
                 .font(.system(size: 60))
                 .foregroundColor(.secondary.opacity(0.5))
-
+            
             VStack(spacing: 8) {
                 Text(title)
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.primary)
-
-                .font(.system(size: 50))
-                .foregroundColor(AppTheme.secondaryText.opacity(0.5))
-            
-            VStack(spacing: 8) {
-                Text(title)
-                    .font(.title3.weight(.semibold))
-                    .foregroundColor(AppTheme.primaryText)
                 
-                Text(message)
-                    .font(.body)
-                    .foregroundColor(AppTheme.secondaryText)
-                    .multilineTextAlignment(.center)
+                    .font(.system(size: 50))
+                    .foregroundColor(AppTheme.secondaryText.opacity(0.5))
+                
+                VStack(spacing: 8) {
+                    Text(title)
+                        .font(.title3.weight(.semibold))
+                        .foregroundColor(AppTheme.primaryText)
+                    
+                    Text(message)
+                        .font(.body)
+                        .foregroundColor(AppTheme.secondaryText)
+                        .multilineTextAlignment(.center)
+                }
             }
+            .frame(maxWidth: .infinity)
+            .padding(40)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                    .shadow(
+                        color: .black.opacity(colorScheme == .dark ? 0.3 : 0.05),
+                        radius: 10,
+                        y: 5
+                    )
+            )
+            .background(AppTheme.secondaryGroupedBackground)
+            .cornerRadius(AppTheme.cornerRadius)
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
         }
-        .frame(maxWidth: .infinity)
-        .padding(40)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(uiColor: .secondarySystemGroupedBackground))
-                .shadow(
-                    color: .black.opacity(colorScheme == .dark ? 0.3 : 0.05),
-                    radius: 10,
-                    y: 5
-                )
-        )
-        .background(AppTheme.secondaryGroupedBackground)
-        .cornerRadius(AppTheme.cornerRadius)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
-}
-
-#Preview {
-    LearnerDashboardView(user: User(
-        id: UUID(),
-        email: "learner@example.com",
-        fullName: "John Doe",
-        role: .learner,
-        approvalStatus: .approved,
-        resumeUrl: nil,
-        passwordResetRequired: false,
-        createdAt: Date(),
-        updatedAt: Date()
-    ))
-    .environmentObject(AuthService())
+    
+    #Preview {
+        LearnerDashboardView(user: User(
+            id: UUID(),
+            email: "learner@example.com",
+            fullName: "John Doe",
+            role: .learner,
+            approvalStatus: .approved,
+            resumeUrl: nil,
+            passwordResetRequired: false,
+            createdAt: Date(),
+            updatedAt: Date()
+        ))
+        .environmentObject(AuthService())
+    }
 }
