@@ -24,7 +24,7 @@ struct AuthenticationView: View {
                     
                     VStack(spacing: 20) {
                         ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: AppTheme.primaryBlue))
+                            .progressViewStyle(CircularProgressViewStyle(tint: AppTheme.primaryAccent))
                             .scaleEffect(1.5)
                         
                         Text("Loading...")

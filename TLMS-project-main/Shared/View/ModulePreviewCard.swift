@@ -13,12 +13,12 @@ struct ModulePreviewCard: View {
                 HStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(AppTheme.primaryBlue.opacity(0.15))
+                            .fill(AppTheme.primaryAccent.opacity(0.15))
                             .frame(width: 40, height: 40)
                         
                         Text("\(moduleNumber)")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(AppTheme.primaryBlue)
+                            .foregroundColor(AppTheme.primaryAccent)
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
@@ -51,7 +51,7 @@ struct ModulePreviewCard: View {
                         HStack(spacing: 12) {
                             Image(systemName: lesson.type.icon)
                                 .font(.system(size: 16))
-                                .foregroundColor(AppTheme.primaryBlue)
+                                .foregroundColor(AppTheme.primaryAccent)
                                 .frame(width: 24)
                             
                             VStack(alignment: .leading, spacing: 2) {
@@ -84,3 +84,4 @@ struct ModulePreviewCard: View {
         .padding(.horizontal)
     }
 }
+
