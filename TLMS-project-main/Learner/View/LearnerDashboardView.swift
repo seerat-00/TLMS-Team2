@@ -228,12 +228,13 @@ struct PublishedCourseCard: View {
                 Text(course.title)
                     .font(.headline)
                     .foregroundColor(AppTheme.primaryText)
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 
                 Text(course.description)
                     .font(.subheadline)
                     .foregroundColor(AppTheme.secondaryText)
                     .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 
                 HStack(spacing: 12) {
                     HStack(spacing: 4) {
@@ -241,6 +242,7 @@ struct PublishedCourseCard: View {
                             .font(.system(size: 10))
                         Text(course.category)
                             .font(.system(size: 12, weight: .medium))
+                            .lineLimit(1)
                     }
                     .foregroundColor(AppTheme.primaryBlue)
                     .padding(.horizontal, 8)
