@@ -12,7 +12,11 @@ struct AuthenticationView: View {
     
     var body: some View {
         Group {
-            if authService.isLoading {
+            if authService.otpSent && !authService.isAuthenticated {
+                // Show OTP verification screen (before authentication completes)
+                OTPVerificationView(email: authService.pendingEmail ?? "")
+                    .environmentObject(authService)
+            } else if authService.isLoading {
                 // Loading state
                 ZStack {
                     AppTheme.groupedBackground

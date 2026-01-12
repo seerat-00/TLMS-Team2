@@ -17,6 +17,16 @@ class AuthService: ObservableObject {
     @Published var errorMessage: String?
     @Published var entryPoint: AuthEntryPoint?
 
+    enum AuthEntryPoint {
+        case login
+        case signup
+    }
+    
+    // 2FA/OTP state
+    @Published var pendingEmail: String?
+    @Published var pendingPassword: String? // Store password for verification after OTP
+    @Published var otpSent = false
+    @Published var otpVerified = false
     
     private let supabase: SupabaseClient
     
@@ -177,6 +187,7 @@ class AuthService: ObservableObject {
         }
     }
     
+    
     // MARK: - Sign In
     
     func signIn(email: String, password: String) async -> Bool {
@@ -215,6 +226,66 @@ class AuthService: ObservableObject {
         } catch {
             errorMessage = "Sign out failed: \(error.localizedDescription)"
         }
+    }
+    
+    // MARK: - Two-Factor Authentication (OTP)
+    
+    func sendOTP(email: String) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            try await supabase.auth.signInWithOTP(email: email)
+            pendingEmail = email
+            otpSent = true
+            return true
+        } catch {
+            errorMessage = "Failed to send verification code: \(error.localizedDescription)"
+            return false
+        }
+    }
+    
+    func setPendingPassword(_ password: String) {
+        pendingPassword = password
+    }
+    
+    func verifyOTP(email: String, code: String) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            // Verify the OTP - this logs the user in
+            let _ = try await supabase.auth.verifyOTP(
+                email: email,
+                token: code,
+                type: .email
+            )
+            
+            // OTP verified and user is now authenticated
+            // Just fetch the user profile
+            await fetchUserProfile()
+            
+            // Clear OTP state
+            otpVerified = true
+            otpSent = false
+            pendingEmail = nil
+            pendingPassword = nil
+            
+            return true
+        } catch {
+            errorMessage = "Invalid or expired code. Please try again."
+            return false
+        }
+    }
+    
+    func resetOTPState() {
+        otpSent = false
+        otpVerified = false
+        pendingEmail = nil
+        pendingPassword = nil
+        errorMessage = nil
     }
     
     // MARK: - Fetch User Profile

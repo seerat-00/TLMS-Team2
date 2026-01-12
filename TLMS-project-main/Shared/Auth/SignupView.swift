@@ -37,18 +37,6 @@ struct SignupView: View {
             
             ScrollView {
                 VStack(spacing: 25) {
-                    // Close button
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 28))
-                                .foregroundColor(AppTheme.secondaryText)
-                        }
-                        Spacer()
-                    }
-                    .padding(.horizontal, 30)
-                    .padding(.top, 20)
-                    
                     // Logo and title
                     VStack(spacing: 12) {
                         Image(systemName: "person.crop.circle.fill.badge.plus")
