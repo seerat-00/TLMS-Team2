@@ -26,48 +26,50 @@ struct AdminDashboardView: View {
                 Color(uiColor: .systemGroupedBackground)
                     .ignoresSafeArea()
                 
-                VStack(spacing: 0) {
-                    // Custom tab selector
-                    HStack(spacing: 0) {
-                        TabButton(
-                            title: "Educators",
-                            icon: "person.badge.shield.checkmark.fill",
-                            isSelected: selectedTab == 0,
-                            badge: pendingEducators.count
-                        ) {
-                            withAnimation(.spring(response: 0.3)) {
-                                selectedTab = 0
+                // Content with scrollable tabs
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Custom tab selector (now scrolls with content)
+                        HStack(spacing: 0) {
+                            TabButton(
+                                title: "Educators",
+                                icon: "person.badge.shield.checkmark.fill",
+                                isSelected: selectedTab == 0,
+                                badge: pendingEducators.count
+                            ) {
+                                withAnimation(.spring(response: 0.3)) {
+                                    selectedTab = 0
+                                }
+                            }
+                            
+                            TabButton(
+                                title: "Courses",
+                                icon: "book.fill",
+                                isSelected: selectedTab == 1,
+                                badge: pendingCourses.count
+                            ) {
+                                withAnimation(.spring(response: 0.3)) {
+                                    selectedTab = 1
+                                }
+                            }
+                            
+                            TabButton(
+                                title: "Users",
+                                icon: "person.3.fill",
+                                isSelected: selectedTab == 2,
+                                badge: nil
+                            ) {
+                                withAnimation(.spring(response: 0.3)) {
+                                    selectedTab = 2
+                                }
                             }
                         }
+                        .padding(.horizontal)
+                        .padding(.top, 20)
+                        .padding(.bottom, 10)
+                        .background(AppTheme.groupedBackground)
                         
-                        TabButton(
-                            title: "Courses",
-                            icon: "book.fill",
-                            isSelected: selectedTab == 1,
-                            badge: pendingCourses.count
-                        ) {
-                            withAnimation(.spring(response: 0.3)) {
-                                selectedTab = 1
-                            }
-                        }
-                        
-                        TabButton(
-                            title: "Users",
-                            icon: "person.3.fill",
-                            isSelected: selectedTab == 2,
-                            badge: nil
-                        ) {
-                            withAnimation(.spring(response: 0.3)) {
-                                selectedTab = 2
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                    .padding(.top, 20)
-                    .background(AppTheme.groupedBackground)
-                    
-                    // Content
-                    ScrollView {
+                        // Tab content
                         VStack(spacing: 20) {
                             if selectedTab == 0 {
                                 pendingEducatorsView
