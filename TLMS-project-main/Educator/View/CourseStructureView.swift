@@ -45,7 +45,7 @@ struct CourseStructureView: View {
                             
                             Spacer()
                             
-                            Button(action: { 
+                            Button(action: {
                                 viewModel.addModule()
                                 // Auto-expand new module
                                 if let lastModule = viewModel.newCourse.modules.last {
