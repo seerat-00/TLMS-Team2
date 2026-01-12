@@ -29,6 +29,7 @@ struct LearnerCourseDetailView: View {
                             Text(course.category)
                                 .font(.subheadline.bold())
                                 .foregroundColor(AppTheme.primaryBlue)
+                                .lineLimit(1)
                         }
                         
                         Spacer()
@@ -117,6 +118,8 @@ struct LearnerCourseDetailView: View {
                                 isEnrolling = true
                                 await onEnroll()
                                 isEnrolling = false
+                                // Dismiss to refresh parent view
+                                dismiss()
                             }
                         }) {
                             HStack {

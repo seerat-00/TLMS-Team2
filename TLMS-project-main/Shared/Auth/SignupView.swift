@@ -361,4 +361,3 @@ struct RoleButton: View {
     SignupView()
         .environmentObject(AuthService())
 }
-
