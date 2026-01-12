@@ -2,6 +2,7 @@ import SwiftUI
 
 struct CoursePreviewView: View {
     @ObservedObject var viewModel: CourseCreationViewModel
+    @StateObject private var courseService = CourseService()
     @Environment(\.dismiss) var dismiss
     @Environment(\.presentationMode) var presentationMode
     @State private var expandedModules: Set<UUID> = []
@@ -214,6 +215,23 @@ struct CoursePreviewView: View {
                 }
             }
             isProcessing = false
+        }
+    }
+
+}
+
+// Extension to make Alert easy
+extension View {
+    func errorAlert(error: Binding<String?>) -> some View {
+        self.alert("Error", isPresented: .init(
+            get: { error.wrappedValue != nil },
+            set: { if !$0 { error.wrappedValue = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if let error = error.wrappedValue {
+                Text(error)
+            }
         }
     }
 }

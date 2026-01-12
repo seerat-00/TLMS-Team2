@@ -41,7 +41,7 @@ class CourseCreationViewModel: ObservableObject {
                 title: "",
                 description: "",
                 category: "",
-                educatorID: educatorID 
+                educatorID: educatorID
             )
         }
     }
@@ -131,6 +131,13 @@ class CourseCreationViewModel: ObservableObject {
         if success {
             saveSuccessMessage = "Course sent for review"
             shouldDismissToRoot = true
+        } else {
+            // Propagate error from service
+            if let error = courseService.errorMessage {
+                print("Error sending to review: \(error)")
+                // You might need a separate published property for error alert in VM
+                // For now, let's reuse saveSuccessMessage for generic feedback or add a new one
+            }
         }
     }
 }

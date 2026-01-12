@@ -72,7 +72,7 @@ struct LoginView: View {
                                     .foregroundColor(.green.opacity(0.8))
                                 Text("2-Step Verification: Code will be sent to your email")
                                     .font(.system(size: 12))
-                                    .foregroundColor(.white.opacity(0.8))
+                                    .foregroundColor(AppTheme.secondaryText)
                             }
                             .padding(.horizontal)
                             
