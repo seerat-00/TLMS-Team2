@@ -141,6 +141,62 @@ struct Course: Identifiable, Codable {
             modules = []
         }
     }
+    
+    // MARK: - Helper Properties
+    
+    var categoryIcon: String {
+        switch category {
+        case "Programming":
+            return "chevron.left.forwardslash.chevron.right"
+        case "Design":
+            return "paintbrush.fill"
+        case "Business":
+            return "briefcase.fill"
+        case "Marketing":
+            return "megaphone.fill"
+        case "Data Science":
+            return "chart.bar.fill"
+        case "Photography":
+            return "camera.fill"
+        case "Music":
+            return "music.note"
+        case "Health & Fitness":
+            return "heart.fill"
+        case "Language":
+            return "text.bubble.fill"
+        case "Personal Development":
+            return "person.fill"
+        default:
+            return "book.fill"
+        }
+    }
+    
+    var categoryColor: Color {
+        switch category {
+        case "Programming":
+            return Color(red: 0.2, green: 0.6, blue: 1.0)
+        case "Design":
+            return Color(red: 1.0, green: 0.4, blue: 0.6)
+        case "Business":
+            return Color(red: 0.4, green: 0.8, blue: 0.4)
+        case "Marketing":
+            return Color(red: 1.0, green: 0.6, blue: 0.2)
+        case "Data Science":
+            return Color(red: 0.6, green: 0.4, blue: 1.0)
+        case "Photography":
+            return Color(red: 1.0, green: 0.8, blue: 0.2)
+        case "Music":
+            return Color(red: 1.0, green: 0.3, blue: 0.5)
+        case "Health & Fitness":
+            return Color(red: 0.2, green: 0.8, blue: 0.6)
+        case "Language":
+            return Color(red: 0.5, green: 0.7, blue: 1.0)
+        case "Personal Development":
+            return Color(red: 0.8, green: 0.5, blue: 1.0)
+        default:
+            return Color(red: 0.0, green: 86.0/255.0, blue: 210.0/255.0)
+        }
+    }
 }
 
 struct Module: Identifiable, Codable {
