@@ -551,6 +551,32 @@ struct UserCard: View {
     }
 }
 
+// MARK: - Empty State View
+
+struct EmptyStateView: View {
+    let icon: String
+    let title: String
+    let message: String
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.system(size: 60))
+                .foregroundColor(.secondary)
+            
+            Text(title)
+                .font(.title2.bold())
+                .foregroundColor(.primary)
+            
+            Text(message)
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(40)
+    }
+}
+
 #Preview {
     AdminDashboardView(user: User(
         id: UUID(),
