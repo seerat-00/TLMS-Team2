@@ -75,6 +75,7 @@ struct Course: Identifiable, Codable {
     var level: CourseLevel = .beginner
     var createdAt: Date = Date()
     var updatedAt: Date = Date()
+    var enrollmentCount: Int = 0
     
     // Convenience property for backward compatibility
     var thumbnailUrl: String? {
@@ -94,10 +95,11 @@ struct Course: Identifiable, Codable {
         case level
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+        case enrollmentCount = "enrollment_count"
     }
     
     // Default init
-    init(id: UUID = UUID(), title: String, description: String, category: String, educatorID: UUID, modules: [Module] = [], status: CourseStatus = .draft, courseCoverUrl: String? = nil, level: CourseLevel = .beginner, createdAt: Date = Date(), updatedAt: Date = Date()) {
+    init(id: UUID = UUID(), title: String, description: String, category: String, educatorID: UUID, modules: [Module] = [], status: CourseStatus = .draft, courseCoverUrl: String? = nil, level: CourseLevel = .beginner, createdAt: Date = Date(), updatedAt: Date = Date(), enrollmentCount: Int = 0) {
         self.id = id
         self.title = title
         self.description = description
@@ -109,6 +111,7 @@ struct Course: Identifiable, Codable {
         self.level = level
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.enrollmentCount = enrollmentCount
     }
     
     // Custom decoding to handle both JSON array and JSON string for modules
@@ -125,6 +128,7 @@ struct Course: Identifiable, Codable {
         level = try container.decodeIfPresent(CourseLevel.self, forKey: .level) ?? .beginner
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)
+        enrollmentCount = try container.decodeIfPresent(Int.self, forKey: .enrollmentCount) ?? 0
         
         // Handle modules being either [Module] or String
         if let modulesArray = try? container.decode([Module].self, forKey: .modules) {

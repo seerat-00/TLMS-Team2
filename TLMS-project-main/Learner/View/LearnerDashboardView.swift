@@ -16,10 +16,28 @@ struct LearnerDashboardView: View {
     @State private var enrolledCourses: [Course] = []
     @State private var isLoading = false
     @State private var selectedTab = 0 // 0: Browse, 1: My Courses
+    @State private var selectedSortOption: CourseSortOption = .relevance
     
     @State private var showProfile = false
     @State private var showingError = false
     @Environment(\.colorScheme) var colorScheme
+    
+    // Computed property for sorted courses
+    private var sortedCourses: [Course] {
+        let coursesToSort = selectedTab == 0 ? publishedCourses : enrolledCourses
+        
+        switch selectedSortOption {
+        case .relevance:
+            // Sort by newest first (as a proxy for relevance)
+            return coursesToSort.sorted { $0.createdAt > $1.createdAt }
+        case .popularity:
+            // Sort by enrollment count (descending)
+            return coursesToSort.sorted { $0.enrollmentCount > $1.enrollmentCount }
+        case .newest:
+            // Sort by creation date (descending)
+            return coursesToSort.sorted { $0.createdAt > $1.createdAt }
+        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -70,6 +88,32 @@ struct LearnerDashboardView: View {
                         .pickerStyle(.segmented)
                         .padding(.horizontal)
                         
+                        // Sort Selection
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Sort by")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundColor(AppTheme.secondaryText)
+                                .padding(.horizontal)
+                            
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 12) {
+                                    ForEach(CourseSortOption.allCases) { option in
+                                        SortOptionButton(
+                                            option: option,
+                                            isSelected: selectedSortOption == option,
+                                            action: {
+                                                withAnimation(.easeInOut(duration: 0.2)) {
+                                                    selectedSortOption = option
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                        }
+                        .padding(.top, 8)
+                        
                         // Course List
                         VStack(alignment: .leading, spacing: 16) {
                             Text(selectedTab == 0 ? "Available Courses" : "My Learning")
@@ -81,9 +125,7 @@ struct LearnerDashboardView: View {
                                 ProgressView()
                                     .padding()
                             } else {
-                                let coursesToShow = selectedTab == 0 ? publishedCourses : enrolledCourses
-                                
-                                if coursesToShow.isEmpty {
+                                if sortedCourses.isEmpty {
                                     EmptyStateView(
                                         icon: "book.closed.fill",
                                         title: selectedTab == 0 ? "No courses available" : "No enrollments yet",
@@ -92,7 +134,7 @@ struct LearnerDashboardView: View {
                                     .padding(.horizontal)
                                 } else {
                                     LazyVStack(spacing: 16) {
-                                        ForEach(coursesToShow) { course in
+                                        ForEach(sortedCourses) { course in
                                             NavigationLink(destination: 
                                                 LearnerCourseDetailView(
                                                     course: course,
@@ -209,18 +251,45 @@ struct PublishedCourseCard: View {
     
     @Environment(\.colorScheme) var colorScheme
     @State private var isEnrolling = false
+
+    // Fallbacks for category styling if Course doesn't provide color/icon
+    private var categoryColor: Color {
+        switch course.category.lowercased() {
+        case "design": return .purple
+        case "development", "programming", "code": return .blue
+        case "marketing": return .orange
+        case "business": return .teal
+        case "data", "analytics": return .green
+        case "photography": return .pink
+        case "music": return .indigo
+        default: return .gray
+        }
+    }
+
+    private var categoryIcon: String {
+        switch course.category.lowercased() {
+        case "design": return "pencil.and.outline"
+        case "development", "programming", "code": return "chevron.left.forwardslash.chevron.right"
+        case "marketing": return "megaphone.fill"
+        case "business": return "briefcase.fill"
+        case "data", "analytics": return "chart.bar.fill"
+        case "photography": return "camera.fill"
+        case "music": return "music.note"
+        default: return "book.fill"
+        }
+    }
     
     var body: some View {
         HStack(spacing: 16) {
             // Course Icon
             ZStack {
                 RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                    .fill(AppTheme.primaryBlue.opacity(0.1))
+                    .fill(categoryColor.opacity(0.15))
                     .frame(width: 60, height: 60)
                 
-                Image(systemName: "book.fill")
+                Image(systemName: categoryIcon)
                     .font(.system(size: 24))
-                    .foregroundColor(AppTheme.primaryBlue)
+                    .foregroundColor(categoryColor)
             }
             
             // Course Info
@@ -244,10 +313,10 @@ struct PublishedCourseCard: View {
                             .font(.system(size: 12, weight: .medium))
                             .lineLimit(1)
                     }
-                    .foregroundColor(AppTheme.primaryBlue)
+                    .foregroundColor(categoryColor)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(AppTheme.primaryBlue.opacity(0.1))
+                    .background(categoryColor.opacity(0.15))
                     .cornerRadius(6)
                     
                     HStack(spacing: 4) {
@@ -367,6 +436,54 @@ struct EmptyStateView: View {
         .background(AppTheme.secondaryGroupedBackground)
         .cornerRadius(AppTheme.cornerRadius)
         .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+}
+
+// MARK: - Sort Option Button Component
+
+struct SortOptionButton: View {
+    let option: CourseSortOption
+    let isSelected: Bool
+    let action: () -> Void
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: option.icon)
+                    .font(.system(size: 14, weight: .semibold))
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(option.displayName)
+                        .font(.system(size: 14, weight: .semibold))
+                    
+                    Text(option.description)
+                        .font(.system(size: 11))
+                        .opacity(0.8)
+                }
+            }
+            .foregroundColor(isSelected ? .white : AppTheme.primaryText)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(isSelected ? AppTheme.primaryBlue : AppTheme.secondaryGroupedBackground)
+                    .shadow(
+                        color: isSelected ? AppTheme.primaryBlue.opacity(0.3) : Color.black.opacity(0.05),
+                        radius: isSelected ? 8 : 2,
+                        x: 0,
+                        y: isSelected ? 4 : 1
+                    )
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        isSelected ? AppTheme.primaryBlue : Color.clear,
+                        lineWidth: isSelected ? 2 : 0
+                    )
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 

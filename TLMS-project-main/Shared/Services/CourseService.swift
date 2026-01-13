@@ -70,7 +70,8 @@ class CourseService: ObservableObject {
         print("DEBUG: Fetching published courses...")
         
         do {
-            let courses: [Course] = try await supabase
+            // First, fetch all published courses
+            var courses: [Course] = try await supabase
                 .from("courses")
                 .select()
                 .eq("status", value: "published")
@@ -79,6 +80,26 @@ class CourseService: ObservableObject {
                 .value
             
             print("DEBUG: Fetched \(courses.count) published courses")
+            
+            // Then, fetch all enrollments to calculate counts
+            let enrollments: [Enrollment] = try await supabase
+                .from("enrollments")
+                .select()
+                .execute()
+                .value
+            
+            // Count enrollments per course
+            var enrollmentCounts: [UUID: Int] = [:]
+            for enrollment in enrollments {
+                enrollmentCounts[enrollment.courseID, default: 0] += 1
+            }
+            
+            // Update courses with enrollment counts
+            for i in 0..<courses.count {
+                courses[i].enrollmentCount = enrollmentCounts[courses[i].id] ?? 0
+            }
+            
+            print("DEBUG: Updated enrollment counts for courses")
             return courses
         } catch {
             print("DEBUG: Error fetching courses: \(error)")
@@ -210,17 +231,30 @@ class CourseService: ObservableObject {
             }
             
             // 2. Fetch courses matching IDs
-            // Supabase "in" filter expects a comma-separated string of values in parens? 
-            // Or simpler to just fetch all and filter client side if list is small?
-            // Better: Use `in` filter correctly.
-            // Supabase Swift client usage for `in`: .in("id", value: [ids])
-            
-            let courses: [Course] = try await supabase
+            var courses: [Course] = try await supabase
                 .from("courses")
                 .select()
                 .in("id", value: courseIDs.map { $0.uuidString })
                 .execute()
                 .value
+            
+            // 3. Fetch all enrollments to calculate counts
+            let allEnrollments: [Enrollment] = try await supabase
+                .from("enrollments")
+                .select()
+                .execute()
+                .value
+            
+            // Count enrollments per course
+            var enrollmentCounts: [UUID: Int] = [:]
+            for enrollment in allEnrollments {
+                enrollmentCounts[enrollment.courseID, default: 0] += 1
+            }
+            
+            // Update courses with enrollment counts
+            for i in 0..<courses.count {
+                courses[i].enrollmentCount = enrollmentCounts[courses[i].id] ?? 0
+            }
             
             return courses
         } catch {
