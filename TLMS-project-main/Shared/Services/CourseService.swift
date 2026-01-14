@@ -148,15 +148,26 @@ class CourseService: ObservableObject {
     
     // MARK: - Status Updates
     
-    func updateCourseStatus(courseID: UUID, status: CourseStatus) async -> Bool {
+    func updateCourseStatus(courseID: UUID, status: CourseStatus, reason: String? = nil) async -> Bool {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
         
         do {
+            // Create encodable update struct
+            struct CourseStatusUpdate: Encodable {
+                let status: String
+                let removal_reason: String?
+            }
+            
+            let updateData = CourseStatusUpdate(
+                status: status.rawValue,
+                removal_reason: reason
+            )
+            
             try await supabase
                 .from("courses")
-                .update(["status": status.rawValue])
+                .update(updateData)
                 .eq("id", value: courseID.uuidString)
                 .execute()
             return true
@@ -259,6 +270,46 @@ class CourseService: ObservableObject {
             return courses
         } catch {
             errorMessage = "Failed to fetch enrolled courses: \(error.localizedDescription)"
+            return []
+        }
+    }
+    
+    // MARK: - Admin Analytics Methods
+    
+    func fetchAllActiveCourses() async -> [Course] {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            let courses: [Course] = try await supabase
+                .from("courses")
+                .select()
+                .eq("status", value: "published")
+                .order("created_at", ascending: false)
+                .execute()
+                .value
+            return courses
+        } catch {
+            errorMessage = "Failed to fetch active courses: \(error.localizedDescription)"
+            return []
+        }
+    }
+    
+    func fetchAllEnrollments() async -> [Enrollment] {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            let enrollments: [Enrollment] = try await supabase
+                .from("enrollments")
+                .select()
+                .execute()
+                .value
+            return enrollments
+        } catch {
+            errorMessage = "Failed to fetch enrollments: \(error.localizedDescription)"
             return []
         }
     }

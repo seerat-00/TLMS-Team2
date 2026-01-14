@@ -9,7 +9,7 @@ import Foundation
 import Combine
 import SwiftUI
 
-enum CourseSortOption: String, CaseIterable, Identifiable {
+enum AdminCourseSortOption: String, CaseIterable, Identifiable {
     case defaultSort = "Default"
     case lowestRating = "Lowest Rating"
     case highestRating = "Highest Rating"
@@ -22,7 +22,7 @@ enum CourseSortOption: String, CaseIterable, Identifiable {
 @MainActor
 class AdminCourseValueViewModel: ObservableObject {
     @Published var courses: [Course] = []
-    @Published var sortOption: CourseSortOption = .lowestRating {
+    @Published var sortOption: AdminCourseSortOption = .lowestRating {
         didSet {
             sortCourses()
         }

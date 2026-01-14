@@ -33,7 +33,7 @@ struct AdminCourseValueView: View {
                         .foregroundColor(AppTheme.secondaryText)
                     
                     Menu {
-                        ForEach(CourseSortOption.allCases) { option in
+                        ForEach(AdminCourseSortOption.allCases) { option in
                             Button {
                                 viewModel.sortOption = option
                             } label: {
