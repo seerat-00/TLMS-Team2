@@ -20,23 +20,6 @@ class CourseService: ObservableObject {
         self.supabase = SupabaseManager.shared.client
     }
     
-    func fetchAllActiveCourses() async -> [Course] {
-        do {
-            let response: [Course] = try await supabase
-                .from("courses")
-                .select()
-                .neq("status", value: "removed")
-                .execute()
-                .value
-            return response
-        } catch {
-            print("Error fetching active courses: \(error)")
-            return []
-        }
-    }
-    
-    // MARK: - Legacy / Helper Methods
-    
     // MARK: - Fetch Courses
     
     func fetchCourses(for educatorID: UUID) async -> [Course] {
@@ -87,7 +70,8 @@ class CourseService: ObservableObject {
         print("DEBUG: Fetching published courses...")
         
         do {
-            let courses: [Course] = try await supabase
+            // First, fetch all published courses
+            var courses: [Course] = try await supabase
                 .from("courses")
                 .select()
                 .eq("status", value: "published")
@@ -96,6 +80,26 @@ class CourseService: ObservableObject {
                 .value
             
             print("DEBUG: Fetched \(courses.count) published courses")
+            
+            // Then, fetch all enrollments to calculate counts
+            let enrollments: [Enrollment] = try await supabase
+                .from("enrollments")
+                .select()
+                .execute()
+                .value
+            
+            // Count enrollments per course
+            var enrollmentCounts: [UUID: Int] = [:]
+            for enrollment in enrollments {
+                enrollmentCounts[enrollment.courseID, default: 0] += 1
+            }
+            
+            // Update courses with enrollment counts
+            for i in 0..<courses.count {
+                courses[i].enrollmentCount = enrollmentCounts[courses[i].id] ?? 0
+            }
+            
+            print("DEBUG: Updated enrollment counts for courses")
             return courses
         } catch {
             print("DEBUG: Error fetching courses: \(error)")
@@ -144,21 +148,15 @@ class CourseService: ObservableObject {
     
     // MARK: - Status Updates
     
-    func updateCourseStatus(courseID: UUID, status: CourseStatus, reason: String? = nil) async -> Bool {
+    func updateCourseStatus(courseID: UUID, status: CourseStatus) async -> Bool {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
         
         do {
-            var updates: [String: AnyJSON] = ["status": .string(status.rawValue)]
-            
-            if let reason = reason {
-                updates["removal_reason"] = .string(reason)
-            }
-            
             try await supabase
                 .from("courses")
-                .update(updates)
+                .update(["status": status.rawValue])
                 .eq("id", value: courseID.uuidString)
                 .execute()
             return true
@@ -193,17 +191,6 @@ class CourseService: ObservableObject {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
-        
-        // Verifying course availability
-        if let course = await fetchCourse(by: courseID) {
-            if course.status != .published {
-                errorMessage = "This course is not currently available for enrollment."
-                return false
-            }
-        } else {
-             errorMessage = "Course not found."
-             return false
-        }
         
         do {
             let enrollment = Enrollment(userID: userID, courseID: courseID)
@@ -244,31 +231,34 @@ class CourseService: ObservableObject {
             }
             
             // 2. Fetch courses matching IDs
-            
-            let courses: [Course] = try await supabase
+            var courses: [Course] = try await supabase
                 .from("courses")
                 .select()
                 .in("id", value: courseIDs.map { $0.uuidString })
                 .execute()
                 .value
             
-            return courses
-        } catch {
-            errorMessage = "Failed to fetch enrolled courses: \(error.localizedDescription)"
-            return []
-        }
-    }
-    
-    func fetchAllEnrollments() async -> [Enrollment] {
-        do {
-            let response: [Enrollment] = try await supabase
+            // 3. Fetch all enrollments to calculate counts
+            let allEnrollments: [Enrollment] = try await supabase
                 .from("enrollments")
                 .select()
                 .execute()
                 .value
-            return response
+            
+            // Count enrollments per course
+            var enrollmentCounts: [UUID: Int] = [:]
+            for enrollment in allEnrollments {
+                enrollmentCounts[enrollment.courseID, default: 0] += 1
+            }
+            
+            // Update courses with enrollment counts
+            for i in 0..<courses.count {
+                courses[i].enrollmentCount = enrollmentCounts[courses[i].id] ?? 0
+            }
+            
+            return courses
         } catch {
-            print("Error fetching all enrollments: \(error)")
+            errorMessage = "Failed to fetch enrolled courses: \(error.localizedDescription)"
             return []
         }
     }
