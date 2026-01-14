@@ -334,5 +334,6 @@ struct Enrollment: Codable {
     init(userID: UUID, courseID: UUID) {
         self.userID = userID
         self.courseID = courseID
+        self.enrolledAt = Date()
     }
 }

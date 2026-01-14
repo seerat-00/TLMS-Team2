@@ -133,8 +133,13 @@ struct LearnerCourseDetailView: View {
                                     ProgressView()
                                         .tint(.white)
                                 } else {
-                                    Text("Enroll Now")
-                                        .font(.headline)
+                                    if let price = course.price, price > 0 {
+                                        Text("Enroll for \(price.formatted(.currency(code: "INR")))")
+                                            .font(.headline)
+                                    } else {
+                                        Text("Enroll Now (Free)")
+                                            .font(.headline)
+                                    }
                                 }
                             }
                             .frame(maxWidth: .infinity)

@@ -25,7 +25,7 @@ struct AdminDashboardView: View {
     @StateObject private var courseService = CourseService()
     
     // Feature Flags
-    private let isRevenueEnabled = false
+    private let isRevenueEnabled = true
     
     // Computed Stats
     var filteredRevenue: Double {
@@ -42,9 +42,18 @@ struct AdminDashboardView: View {
         }
         
         let coursePriceMap = Dictionary(uniqueKeysWithValues: activeCourses.map { ($0.id, $0.price ?? 0) })
-        return filtered.reduce(0) { total, enrollment in
+        
+        let total = filtered.reduce(0) { total, enrollment in
             total + (coursePriceMap[enrollment.courseID] ?? 0)
         }
+        
+        print("DEBUG: Active Courses Count: \(activeCourses.count)")
+        print("DEBUG: All Enrollments Count: \(allEnrollments.count)")
+        print("DEBUG: Filtered Enrollments (with date): \(filtered.count)")
+        print("DEBUG: Course Prices: \(coursePriceMap)")
+        print("DEBUG: Calculated Revenue: \(total)")
+        
+        return total
     }
     
     var filteredCoursesCount: Int {

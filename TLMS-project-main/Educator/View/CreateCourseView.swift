@@ -95,6 +95,24 @@ struct CreateCourseView: View {
                                 .padding(.top, 4)
                         }
                         
+                        // Price
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Course Price (₹)")
+                                .font(.headline)
+                                .foregroundColor(AppTheme.secondaryText)
+                            
+                            TextField("e.g. 499", value: $viewModel.newCourse.price, format: .number)
+                                .keyboardType(.decimalPad)
+                                .font(.body)
+                                .padding()
+                                .background(AppTheme.secondaryGroupedBackground)
+                                .cornerRadius(AppTheme.cornerRadius)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                                        .stroke(Color.secondary.opacity(0.2), lineWidth: 0.5)
+                                )
+                        }
+                        
                         // Description
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Description")
