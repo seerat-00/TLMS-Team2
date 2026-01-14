@@ -17,6 +17,7 @@ struct LearnerCourseDetailView: View {
     @State private var isEnrolling = false
     @State private var showPaymentSheet = false
     @State private var paymentURL: URL?
+    @State private var currentOrderId: String?
     @State private var showError = false
     @State private var errorMessage = ""
     
@@ -248,6 +249,9 @@ struct LearnerCourseDetailView: View {
             userId: userId,
             amount: price
         ) {
+            // Save the order ID for verification
+            self.currentOrderId = order.orderId
+            
             // Generate payment URL
             if let url = paymentService.getPaymentURL(
                 order: order,
@@ -268,8 +272,11 @@ struct LearnerCourseDetailView: View {
     
     private func handlePaymentSuccess(paymentId: String) async {
         // Verify payment and enroll
-        // Extract order ID from course ID (matches what we created in initiatePayment)
-        let orderId = "order_\(course.id.uuidString.prefix(14))"
+        guard let orderId = currentOrderId else {
+            errorMessage = "Order ID validation failed"
+            showError = true
+            return
+        }
         
         let success = await paymentService.verifyPayment(
             orderId: orderId,

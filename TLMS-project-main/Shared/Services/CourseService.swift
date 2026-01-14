@@ -309,6 +309,7 @@ class CourseService: ObservableObject {
                 .value
             return enrollments
         } catch {
+            print("❌ Error fetching enrollments: \(error)") // Added debug print
             errorMessage = "Failed to fetch enrollments: \(error.localizedDescription)"
             return []
         }
