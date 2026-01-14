@@ -137,13 +137,10 @@ struct LoginView: View {
     
     private func handleLogin() {
         Task {
-            print("� Starting 2FA login...")
+            print("🔐 Starting 2FA login...")
             
-            // Store password for later verification
-            authService.setPendingPassword(password)
-            
-            // Send OTP - AuthenticationView will show OTP screen automatically
-            let success = await authService.sendOTP(email: email)
+            // Send OTP - password will be verified first
+            let success = await authService.sendOTP(email: email, password: password)
             print("📧 OTP sent: \(success)")
         }
     }

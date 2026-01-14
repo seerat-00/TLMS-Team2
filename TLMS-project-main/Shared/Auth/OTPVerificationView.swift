@@ -196,7 +196,13 @@ struct OTPVerificationView: View {
         guard canResend else { return }
         
         Task {
-            let success = await authService.sendOTP(email: email)
+            // Use the stored password from authService
+            guard let password = authService.pendingPassword else {
+                authService.errorMessage = "Session expired. Please login again."
+                return
+            }
+            
+            let success = await authService.sendOTP(email: email, password: password)
             if success {
                 otpCode = ""
                 canResend = false

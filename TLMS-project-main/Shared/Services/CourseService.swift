@@ -245,7 +245,7 @@ class CourseService: ObservableObject {
             var courses: [Course] = try await supabase
                 .from("courses")
                 .select()
-                .in("id", value: courseIDs.map { $0.uuidString })
+                .in("id", values: courseIDs.map { $0.uuidString })
                 .execute()
                 .value
             

@@ -37,7 +37,7 @@ class AdminCourseValueViewModel: ObservableObject {
         errorMessage = nil
         
         // Fetch real published courses from Supabase
-        var fetchedCourses = await courseService.fetchPublishedCourses()
+        let fetchedCourses = await courseService.fetchPublishedCourses()
         
         // MOCK DATA AUGMENTATION
         // Since backend doesn't have rating/price/enrolledCount yet, we mock them for the demo.

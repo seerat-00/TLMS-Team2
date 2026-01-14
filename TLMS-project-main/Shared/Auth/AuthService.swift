@@ -188,6 +188,31 @@ class AuthService: ObservableObject {
     }
     
     
+    // MARK: - Email Validation
+    
+    func isValidEmail(_ email: String) -> Bool {
+        // Check basic email format
+        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+        
+        guard emailPredicate.evaluate(with: email) else {
+            return false
+        }
+        
+        // Check for common email domains
+        let commonDomains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com", "protonmail.com"]
+        let lowercasedEmail = email.lowercased()
+        
+        for domain in commonDomains {
+            if lowercasedEmail.hasSuffix("@" + domain) {
+                return true
+            }
+        }
+        
+        errorMessage = "Please use a valid email address (e.g., @gmail.com, @yahoo.com, @outlook.com)"
+        return false
+    }
+    
     // MARK: - Sign In
     
     func signIn(email: String, password: String) async -> Bool {
@@ -230,16 +255,41 @@ class AuthService: ObservableObject {
     
     // MARK: - Two-Factor Authentication (OTP)
     
-    func sendOTP(email: String) async -> Bool {
+    func sendOTP(email: String, password: String) async -> Bool {
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
         
+        // Validate email format first
+        guard isValidEmail(email) else {
+            isLoading = false
+            return false
+        }
+        
         do {
+            // CRITICAL: Verify password BEFORE sending OTP
+            let _ = try await supabase.auth.signIn(
+                email: email,
+                password: password
+            )
+            
+            // Password is correct, now sign out and send OTP for 2FA
+            try await supabase.auth.signOut()
+            
+            // Now send OTP
             try await supabase.auth.signInWithOTP(email: email)
             pendingEmail = email
+            pendingPassword = password
             otpSent = true
             return true
+        } catch let error as AuthError {
+            // Check if it's an invalid credentials error
+            if error.localizedDescription.contains("Invalid") || error.localizedDescription.contains("credentials") {
+                errorMessage = "Invalid email or password. Please check your credentials."
+            } else {
+                errorMessage = "Failed to send verification code: \(error.localizedDescription)"
+            }
+            return false
         } catch {
             errorMessage = "Failed to send verification code: \(error.localizedDescription)"
             return false
