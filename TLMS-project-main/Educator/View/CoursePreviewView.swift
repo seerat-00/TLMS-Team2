@@ -156,7 +156,7 @@ struct CoursePreviewView: View {
         .navigationTitle("Course Preview")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .navigationBarTrailing) {
                 Button("Cancel") {
                     presentationMode.wrappedValue.dismiss()
                 }

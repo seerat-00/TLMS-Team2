@@ -45,7 +45,7 @@ struct EducatorDashboardView: View {
                             // Ongoing Courses
                             coursesSection
                             
-                            // Primary CTA
+                            // Primary CTAs
                             createCourseButton
                         }
                         
@@ -108,6 +108,7 @@ struct EducatorDashboardView: View {
                 }
             }
         }
+
     }
     
     // MARK: - Header Section
@@ -288,6 +289,10 @@ struct EducatorDashboardView: View {
         }
         .padding(.top, 8)
     }
+    
+
+    
+
     
     private func handleLogout() {
         Task {
@@ -520,6 +525,9 @@ struct RejectedBanner: View {
         .shadow(color: .red.opacity(0.2), radius: 15, y: 5)
     }
 }
+
+
+
 
 #Preview {
     EducatorDashboardView(user: User(

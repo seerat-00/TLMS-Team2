@@ -106,6 +106,62 @@ class CourseCreationViewModel: ObservableObject {
         newCourse.modules[moduleIndex].lessons.move(fromOffsets: source, toOffset: destination)
     }
     
+    // MARK: - Quiz Management
+    
+    func getQuizQuestions(moduleID: UUID, lessonID: UUID) -> [Question] {
+        guard let moduleIndex = newCourse.modules.firstIndex(where: { $0.id == moduleID }),
+              let lessonIndex = newCourse.modules[moduleIndex].lessons.firstIndex(where: { $0.id == lessonID }) else {
+            return []
+        }
+        return newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions ?? []
+    }
+    
+    func setQuizQuestions(moduleID: UUID, lessonID: UUID, questions: [Question]) {
+        guard let moduleIndex = newCourse.modules.firstIndex(where: { $0.id == moduleID }),
+              let lessonIndex = newCourse.modules[moduleIndex].lessons.firstIndex(where: { $0.id == lessonID }) else {
+            return
+        }
+        newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions = questions
+        newCourse.modules[moduleIndex].lessons[lessonIndex].type = .quiz
+    }
+    
+    func addQuestionToLesson(moduleID: UUID, lessonID: UUID) {
+        guard let moduleIndex = newCourse.modules.firstIndex(where: { $0.id == moduleID }),
+              let lessonIndex = newCourse.modules[moduleIndex].lessons.firstIndex(where: { $0.id == lessonID }) else {
+            return
+        }
+        
+        let newQuestion = Question()
+        if newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions == nil {
+            newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions = []
+        }
+        newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions?.append(newQuestion)
+    }
+    
+    func updateQuestionInLesson(moduleID: UUID, lessonID: UUID, question: Question) {
+        guard let moduleIndex = newCourse.modules.firstIndex(where: { $0.id == moduleID }),
+              let lessonIndex = newCourse.modules[moduleIndex].lessons.firstIndex(where: { $0.id == lessonID }),
+              var questions = newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions,
+              let questionIndex = questions.firstIndex(where: { $0.id == question.id }) else {
+            return
+        }
+        
+        questions[questionIndex] = question
+        newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions = questions
+    }
+    
+    func deleteQuestionFromLesson(moduleID: UUID, lessonID: UUID, questionIndex: Int) {
+        guard let moduleIndex = newCourse.modules.firstIndex(where: { $0.id == moduleID }),
+              let lessonIndex = newCourse.modules[moduleIndex].lessons.firstIndex(where: { $0.id == lessonID }),
+              var questions = newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions,
+              questionIndex >= 0 && questionIndex < questions.count else {
+            return
+        }
+        
+        questions.remove(at: questionIndex)
+        newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions = questions
+    }
+    
     
     // MARK: - Course Actions
     
