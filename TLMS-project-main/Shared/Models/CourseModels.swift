@@ -233,10 +233,18 @@ struct Lesson: Identifiable, Codable {
     var content: String? // URL or text content depending on type
     var type: ContentType
     var duration: TimeInterval?
+    var quizQuestions: [Question]? // Quiz questions when type is .quiz
     
     // Helper to ensure name is not empty
     var isValid: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    
+    // Validate quiz lessons have questions
+    var isQuizValid: Bool {
+        guard type == .quiz else { return true }
+        guard let questions = quizQuestions, !questions.isEmpty else { return false }
+        return questions.allSatisfy { $0.isValid }
     }
 }
 

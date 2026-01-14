@@ -166,20 +166,15 @@ struct CreateCourseView: View {
                 }
             }
         }
-        .navigationTitle("Create Course")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {
                     dismiss()
                 }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                            .font(.body.weight(.semibold))
-                        Text("Back")
-                            .font(.body)
-                    }
-                    .foregroundColor(AppTheme.primaryBlue)
+                    Image(systemName: "chevron.left")
+                        .font(.body.weight(.semibold))
+                        .foregroundColor(.black)
                 }
             }
         }
