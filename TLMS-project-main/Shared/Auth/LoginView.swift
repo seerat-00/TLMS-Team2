@@ -66,8 +66,6 @@ struct LoginView: View {
                                 showPassword: $showPassword
                             )
                             
-<<<<<<< HEAD
-=======
                             // 2FA Info message
                             HStack(spacing: 8) {
                                 Image(systemName: "lock.shield.fill")
@@ -77,7 +75,6 @@ struct LoginView: View {
                                     .foregroundColor(AppTheme.secondaryText)
                             }
                             .padding(.horizontal)
->>>>>>> 97c6b8651aa3899687786e2dd52f87fad629a2b2
                             
                             // Error message
                             if let errorMessage = authService.errorMessage {

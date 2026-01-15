@@ -243,28 +243,16 @@ struct LearnerDashboardView: View {
                                     .padding(.horizontal)
                                 } else {
                                     LazyVStack(spacing: 16) {
-<<<<<<< HEAD
-                                        ForEach(coursesToShow) { course in
+                                        ForEach(filteredCourses) { course in
                                             NavigationLink(destination:
                                                 LearnerCourseDetailView(
                                                     course: course,
                                                     isEnrolled: isEnrolled(course),
+                                                    userId: user.id,
                                                     onEnroll: {
                                                         await enroll(course: course)
                                                     }
                                                 )
-=======
-                                        ForEach(filteredCourses) { course in
-                                            NavigationLink(destination:
-                                                            LearnerCourseDetailView(
-                                                                course: course,
-                                                                isEnrolled: isEnrolled(course),
-                                                                userId: user.id,
-                                                                onEnroll: {
-                                                                    await enroll(course: course)
-                                                                }
-                                                            )
->>>>>>> 97c6b8651aa3899687786e2dd52f87fad629a2b2
                                             ) {
                                                 PublishedCourseCard(
                                                     course: course,
