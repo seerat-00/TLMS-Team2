@@ -12,6 +12,9 @@ struct LessonDetailView: View {
     let moduleID: UUID
     let lessonID: UUID
     
+    @State private var navigateToContentEditor = false
+    @Environment(\.dismiss) var dismiss
+    
     // Derived bindings to edit the model directly
     private var lessonBinding: Binding<Lesson>? {
         guard let moduleIndex = viewModel.newCourse.modules.firstIndex(where: { $0.id == moduleID }),
@@ -97,7 +100,15 @@ struct LessonDetailView: View {
                                     ContentTypeSelectionCard(
                                         type: type,
                                         isSelected: lesson.type.wrappedValue == type,
-                                        action: { lesson.type.wrappedValue = type }
+                                        action: {
+                                            lesson.type.wrappedValue = type
+                                            // Navigate to content editor if not quiz
+                                            if type != .quiz {
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                                    navigateToContentEditor = true
+                                                }
+                                            }
+                                        }
                                     )
                                 }
                             }
@@ -108,6 +119,19 @@ struct LessonDetailView: View {
                     .padding(.bottom, 30)
                 }
                 .navigationTitle("Edit Lesson")
+                .background(
+                    NavigationLink(
+                        destination: LessonContentEditorView(
+                            viewModel: viewModel,
+                            moduleID: moduleID,
+                            lessonID: lessonID
+                        ),
+                        isActive: $navigateToContentEditor
+                    ) {
+                        EmptyView()
+                    }
+                    .hidden()
+                )
             } else {
                 Text("Lesson not found")
                     .foregroundColor(.secondary)

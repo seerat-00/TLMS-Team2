@@ -235,6 +235,12 @@ struct Lesson: Identifiable, Codable {
     var duration: TimeInterval?
     var quizQuestions: [Question]? // Quiz questions when type is .quiz
     
+    // Additional content properties
+    var contentDescription: String? // Description for video/pdf/presentation content
+    var fileURL: String? // URL for uploaded files (video, pdf, keynote)
+    var fileName: String? // Original filename
+    var textContent: String? // For text-based lessons
+    
     // Helper to ensure name is not empty
     var isValid: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -246,6 +252,18 @@ struct Lesson: Identifiable, Codable {
         guard let questions = quizQuestions, !questions.isEmpty else { return false }
         return questions.allSatisfy { $0.isValid }
     }
+    
+    // Check if content is provided for non-quiz lessons
+    var hasContent: Bool {
+        switch type {
+        case .quiz:
+            return isQuizValid
+        case .text:
+            return textContent != nil && !textContent!.isEmpty
+        case .video, .pdf, .presentation:
+            return fileURL != nil || contentDescription != nil
+        }
+    }
 }
 
 enum ContentType: String, Codable, CaseIterable, Identifiable {
@@ -256,6 +274,14 @@ enum ContentType: String, Codable, CaseIterable, Identifiable {
     case quiz = "Quiz"
     
     var id: String { rawValue }
+    
+    // Short display name for compact UI
+    var shortName: String {
+        switch self {
+        case .presentation: return "Slides"
+        default: return rawValue
+        }
+    }
     
     var icon: String {
         switch self {

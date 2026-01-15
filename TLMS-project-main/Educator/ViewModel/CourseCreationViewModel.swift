@@ -162,6 +162,37 @@ class CourseCreationViewModel: ObservableObject {
         newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions = questions
     }
     
+    // MARK: - Lesson Content Management
+    
+    func updateLessonTextContent(moduleID: UUID, lessonID: UUID, textContent: String) {
+        guard let moduleIndex = newCourse.modules.firstIndex(where: { $0.id == moduleID }),
+              let lessonIndex = newCourse.modules[moduleIndex].lessons.firstIndex(where: { $0.id == lessonID }) else {
+            return
+        }
+        newCourse.modules[moduleIndex].lessons[lessonIndex].textContent = textContent
+    }
+    
+    func updateLessonMediaContent(moduleID: UUID, lessonID: UUID, fileURL: String?, fileName: String?, description: String?) {
+        guard let moduleIndex = newCourse.modules.firstIndex(where: { $0.id == moduleID }),
+              let lessonIndex = newCourse.modules[moduleIndex].lessons.firstIndex(where: { $0.id == lessonID }) else {
+            return
+        }
+        newCourse.modules[moduleIndex].lessons[lessonIndex].fileURL = fileURL
+        newCourse.modules[moduleIndex].lessons[lessonIndex].fileName = fileName
+        newCourse.modules[moduleIndex].lessons[lessonIndex].contentDescription = description
+    }
+    
+    func clearLessonContent(moduleID: UUID, lessonID: UUID) {
+        guard let moduleIndex = newCourse.modules.firstIndex(where: { $0.id == moduleID }),
+              let lessonIndex = newCourse.modules[moduleIndex].lessons.firstIndex(where: { $0.id == lessonID }) else {
+            return
+        }
+        newCourse.modules[moduleIndex].lessons[lessonIndex].textContent = nil
+        newCourse.modules[moduleIndex].lessons[lessonIndex].fileURL = nil
+        newCourse.modules[moduleIndex].lessons[lessonIndex].fileName = nil
+        newCourse.modules[moduleIndex].lessons[lessonIndex].contentDescription = nil
+    }
+    
     
     // MARK: - Course Actions
     

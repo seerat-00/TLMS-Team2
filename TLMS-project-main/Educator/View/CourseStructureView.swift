@@ -252,7 +252,7 @@ struct ExpandableModuleCard: View {
                         HStack {
                             Image(systemName: "doc.text")
                                 .font(.caption)
-                            Text("\(module.lessons.count) Lessons")
+                            Text("\(module.lessons.count) \(module.lessons.count == 1 ? "Lesson" : "Lessons")")
                                 .font(.caption)
                         }
                         .foregroundColor(.secondary)
@@ -351,6 +351,7 @@ struct LessonInlineRow: View {
         
         @State private var showDeleteAlert = false
         @State private var navigateToQuizEditor = false
+        @State private var navigateToContentEditor = false
         
         var body: some View {
             HStack(spacing: 12) {
@@ -365,56 +366,74 @@ struct LessonInlineRow: View {
                         .foregroundColor(.blue)
                 }
                 
-                // Lesson Name
-                Text(lesson.title)
-                    .font(.subheadline)
-                    .foregroundColor(.primary)
+                // Lesson Name and Type
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(lesson.title)
+                        .font(.subheadline)
+                        .foregroundColor(.primary)
+                    
+                    HStack(spacing: 4) {
+                        Text(lesson.type.shortName)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        // Content status indicator next to type
+                        if lesson.hasContent {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.system(size: 10))
+                        }
+                    }
+                }
                 
                 Spacer()
                 
-                // Quiz indicator or Content Button
-                if lesson.type == .quiz {
-                    NavigationLink(destination: LessonQuizEditorView(
-                        viewModel: viewModel,
-                        moduleID: moduleID,
-                        lessonID: lesson.id,
-                        lessonTitle: lesson.title
-                    )) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "pencil.circle")
-                            Text("Edit Quiz")
-                        }
-                        .font(.caption.bold())
-                        .foregroundColor(.blue)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(6)
-                    }
-                } else {
-                    // + Content Button
+                // Action Buttons
+                HStack(spacing: 8) {
+                    // Change Type Menu
                     Menu {
                         ForEach(ContentType.allCases) { type in
                             Button(action: {
+                                updateLessonContentType(to: type)
                                 if type == .quiz {
-                                    // Set type to quiz and navigate
-                                    updateLessonContentType(to: type)
                                     navigateToQuizEditor = true
                                 } else {
-                                    updateLessonContentType(to: type)
+                                    navigateToContentEditor = true
                                 }
                             }) {
-                                Label(type.rawValue, systemImage: type.icon)
+                                Label(type.shortName, systemImage: type.icon)
                             }
                         }
                     } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "plus.circle")
-                            Text("Content")
+                        HStack(spacing: 3) {
+                            Image(systemName: "ellipsis.circle")
+                                .font(.caption)
+                            Text("Type")
+                                .font(.caption.bold())
                         }
-                        .font(.caption.bold())
+                        .foregroundColor(.purple)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 4)
+                        .background(Color.purple.opacity(0.1))
+                        .cornerRadius(6)
+                    }
+                    
+                    // Edit Button
+                    Button(action: {
+                        if lesson.type == .quiz {
+                            navigateToQuizEditor = true
+                        } else {
+                            navigateToContentEditor = true
+                        }
+                    }) {
+                        HStack(spacing: 3) {
+                            Image(systemName: "pencil.circle")
+                                .font(.caption)
+                            Text("Edit")
+                                .font(.caption.bold())
+                        }
                         .foregroundColor(.blue)
-                        .padding(.horizontal, 8)
+                        .padding(.horizontal, 6)
                         .padding(.vertical, 4)
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(6)
@@ -428,7 +447,7 @@ struct LessonInlineRow: View {
                         .font(.body)
                 }
                 
-                // Hidden NavigationLink for programmatic navigation
+                // Hidden NavigationLinks for programmatic navigation
                 NavigationLink(
                     destination: LessonQuizEditorView(
                         viewModel: viewModel,
@@ -437,6 +456,18 @@ struct LessonInlineRow: View {
                         lessonTitle: lesson.title
                     ),
                     isActive: $navigateToQuizEditor
+                ) {
+                    EmptyView()
+                }
+                .hidden()
+                
+                NavigationLink(
+                    destination: LessonContentEditorView(
+                        viewModel: viewModel,
+                        moduleID: moduleID,
+                        lessonID: lesson.id
+                    ),
+                    isActive: $navigateToContentEditor
                 ) {
                     EmptyView()
                 }
