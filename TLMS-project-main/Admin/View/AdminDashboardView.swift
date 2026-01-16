@@ -79,7 +79,7 @@ struct AdminDashboardView: View {
         .task {
             await loadData()
         }
-        .onChange(of: authService.currentUser?.id) { _ in
+        .onChange(of: authService.currentUser?.id) { oldValue, newValue in
             Task { await loadData() }
         }
     }

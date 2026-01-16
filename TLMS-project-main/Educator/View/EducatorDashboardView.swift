@@ -158,20 +158,53 @@ struct EducatorDashboardView: View {
     // MARK: - Stats Section
     
     private var statsSection: some View {
-        HStack(spacing: 16) {
-            StatGlassCard(
-                icon: "book.fill",
-                title: "Courses",
-                value: "\(viewModel.totalCourses)",
-                color: AppTheme.primaryBlue
-            )
+        VStack(spacing: 12) {
+            HStack(spacing: 16) {
+                StatGlassCard(
+                    icon: "book.fill",
+                    title: "Courses",
+                    value: "\(viewModel.totalCourses)",
+                    color: AppTheme.primaryBlue
+                )
+                
+                StatGlassCard(
+                    icon: "person.3.fill",
+                    title: "Enrollments",
+                    value: "\(viewModel.totalEnrollments)",
+                    color: AppTheme.successGreen
+                )
+            }
             
-            StatGlassCard(
-                icon: "person.3.fill",
-                title: "Enrollments",
-                value: "\(viewModel.totalEnrollments)",
-                color: AppTheme.successGreen
-            )
+            // Quiz Results Card with Navigation
+            NavigationLink(destination: QuizResultsListView(educatorID: user.id)) {
+                HStack(spacing: 12) {
+                    Image(systemName: "chart.bar.doc.horizontal.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.purple)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(viewModel.totalQuizSubmissions)")
+                            .font(.title2.bold())
+                            .foregroundColor(AppTheme.primaryText)
+                        
+                        Text("Quiz Submissions")
+                            .font(.subheadline)
+                            .foregroundColor(AppTheme.secondaryText)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(AppTheme.secondaryText)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .background(AppTheme.secondaryGroupedBackground)
+                .cornerRadius(AppTheme.cornerRadius)
+                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+            }
+            .buttonStyle(PlainButtonStyle())
         }
     }
     
