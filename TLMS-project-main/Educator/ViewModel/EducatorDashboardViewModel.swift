@@ -12,6 +12,7 @@ import Combine
 class EducatorDashboardViewModel: ObservableObject {
     @Published var totalCourses: Int = 0
     @Published var totalEnrollments: Int = 0
+    @Published var totalQuizSubmissions: Int = 0
     @Published var recentCourses: [DashboardCourse] = []
     @Published var courseToDelete: DashboardCourse?
     @Published var showDeleteConfirmation = false
@@ -19,6 +20,7 @@ class EducatorDashboardViewModel: ObservableObject {
     @Published var showUnpublishConfirmation = false
     
     private let courseService = CourseService()
+    private let quizResultsService = QuizResultsService()
     
     init() {
         // Initialize with default values
@@ -49,6 +51,10 @@ class EducatorDashboardViewModel: ObservableObject {
                 learnerCount: 0 // TODO: Implement enrollment count
             )
         }
+        
+        // Load quiz results summary
+        let quizResults = await quizResultsService.fetchEducatorQuizResults(educatorID: educatorID)
+        self.totalQuizSubmissions = quizResults.reduce(0) { $0 + $1.totalSubmissions }
     }
     
     func deleteCourse(_ course: DashboardCourse) async -> Bool {
