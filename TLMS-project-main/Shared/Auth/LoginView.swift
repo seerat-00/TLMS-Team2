@@ -66,15 +66,6 @@ struct LoginView: View {
                                 showPassword: $showPassword
                             )
                             
-                            // 2FA Info message
-                            HStack(spacing: 8) {
-                                Image(systemName: "lock.shield.fill")
-                                    .foregroundColor(.green.opacity(0.8))
-                                Text("2-Step Verification: Code will be sent to your email")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(AppTheme.secondaryText)
-                            }
-                            .padding(.horizontal)
                             
                             // Error message
                             if let errorMessage = authService.errorMessage {

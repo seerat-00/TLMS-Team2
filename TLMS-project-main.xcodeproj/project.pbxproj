@@ -19,9 +19,22 @@
 		FE5841042F0E650B00BA7706 /* TLMS-project-main.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TLMS-project-main.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		65AE9BD82F19F83B00247A9D /* Exceptions for "TLMS-project-main" folder in "TLMS-project-main" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = FE5841032F0E650B00BA7706 /* TLMS-project-main */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		FE5841062F0E650B00BA7706 /* TLMS-project-main */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				65AE9BD82F19F83B00247A9D /* Exceptions for "TLMS-project-main" folder in "TLMS-project-main" target */,
+			);
 			path = "TLMS-project-main";
 			sourceTree = "<group>";
 		};
@@ -290,6 +303,7 @@
 				DEVELOPMENT_TEAM = 4ZNPSA2GSY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "TLMS-project-main/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -322,6 +336,7 @@
 				DEVELOPMENT_TEAM = 4ZNPSA2GSY;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "TLMS-project-main/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
