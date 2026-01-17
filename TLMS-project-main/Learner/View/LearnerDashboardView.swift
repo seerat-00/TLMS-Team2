@@ -46,6 +46,13 @@ struct LearnerDashboardView: View {
                     Label("Search", systemImage: "magnifyingglass")
                 }
                 .tag(2)
+            
+            // Profile Tab
+            ProfileView(user: user)
+                .tabItem {
+                    Label("Profile", systemImage: "person.crop.circle")
+                }
+                .tag(3)
         }
         .tint(AppTheme.primaryBlue)
         .toolbarBackground(.visible, for: .tabBar)

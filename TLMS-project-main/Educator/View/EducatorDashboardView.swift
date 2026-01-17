@@ -2,7 +2,7 @@
 //  EducatorDashboardView.swift
 //  TLMS-project-main
 //
-//  High-fidelity Educator Landing Screen
+//  High-fidelity Educator Landing Screen with Tab Navigation
 //
 
 import SwiftUI
@@ -11,12 +11,53 @@ struct EducatorDashboardView: View {
     let user: User
     @EnvironmentObject var authService: AuthService
     @StateObject private var viewModel = EducatorDashboardViewModel()
-    @State private var showProfile = false
+    @State private var selectedTab = 0
     @State private var showCreateCourse = false
     @State private var courseToEdit: DashboardCourse? = nil
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
+        TabView(selection: $selectedTab) {
+            // Dashboard Tab
+            dashboardContent
+                .tabItem {
+                    Label("Dashboard", systemImage: "chart.bar.doc.horizontal")
+                }
+                .tag(0)
+            
+            // Profile Tab
+            EducatorProfileView(user: user)
+                .tabItem {
+                    Label("Profile", systemImage: "person.crop.circle")
+                }
+                .tag(1)
+        }
+        .tint(AppTheme.primaryBlue)
+        .toolbarBackground(.visible, for: .tabBar)
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar) // Ensure contrast
+        .fullScreenCover(isPresented: $showCreateCourse, onDismiss: {
+            // Refresh dashboard when course creation is dismissed
+            courseToEdit = nil
+            Task {
+                await viewModel.loadData(educatorID: user.id)
+            }
+        }) {
+            NavigationView {
+                if let courseToEdit = courseToEdit {
+                    // Editing existing draft course
+                    CreateCourseView(viewModel: CourseCreationViewModel(educatorID: user.id, existingCourse: courseToEdit))
+                } else {
+                    // Creating new course
+                    CreateCourseView(viewModel: CourseCreationViewModel(educatorID: user.id))
+                }
+            }
+        }
+    }
+    
+    // MARK: - Dashboard Content
+    
+    private var dashboardContent: some View {
         NavigationView {
             ZStack {
                 // Professional background
@@ -58,57 +99,21 @@ struct EducatorDashboardView: View {
             .navigationTitle("Educator Dashboard")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button(action: { showProfile = true }) {
-                            Label("Profile", systemImage: "person.circle")
+                     // Removed Menu button as functionality is now in Profile Tab or refresh
+                    Button(action: {
+                        Task {
+                            await viewModel.loadData(educatorID: user.id)
                         }
-                        
-                        Divider()
-                        
-                        Button(action: {
-                            Task {
-                                await viewModel.loadData(educatorID: user.id)
-                            }
-                        }) {
-                            Label("Refresh", systemImage: "arrow.clockwise")
-                        }
-                        
-                        Divider()
-                        
-                        Button(role: .destructive, action: handleLogout) {
-                            Label("Sign Out", systemImage: "arrow.right.square")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle.fill")
-                            .font(.system(size: 24))
-                            .foregroundColor(AppTheme.primaryBlue)
+                    }) {
+                        Label("Refresh", systemImage: "arrow.clockwise")
                     }
                 }
             }
         }
         .navigationViewStyle(.stack)
-        .id(user.id)
         .task {
             await viewModel.loadData(educatorID: user.id)
         }
-        .fullScreenCover(isPresented: $showCreateCourse, onDismiss: {
-            // Refresh dashboard when course creation is dismissed
-            courseToEdit = nil
-            Task {
-                await viewModel.loadData(educatorID: user.id)
-            }
-        }) {
-            NavigationView {
-                if let courseToEdit = courseToEdit {
-                    // Editing existing draft course
-                    CreateCourseView(viewModel: CourseCreationViewModel(educatorID: user.id, existingCourse: courseToEdit))
-                } else {
-                    // Creating new course
-                    CreateCourseView(viewModel: CourseCreationViewModel(educatorID: user.id))
-                }
-            }
-        }
-
     }
     
     // MARK: - Header Section
@@ -290,16 +295,6 @@ struct EducatorDashboardView: View {
         }
         .padding(.top, 8)
     }
-    
-
-    
-
-    
-    private func handleLogout() {
-        Task {
-            await authService.signOut()
-        }
-    }
 }
 
 // MARK: - Stat Card
@@ -368,7 +363,7 @@ struct CourseGlassCard: View {
                     // Status Badge
                     HStack(spacing: 4) {
                         Image(systemName: course.status.icon)
-                            .font(.caption2)
+                        .font(.caption2)
                         Text(course.status.displayName)
                             .font(.caption2.weight(.medium))
                     }
