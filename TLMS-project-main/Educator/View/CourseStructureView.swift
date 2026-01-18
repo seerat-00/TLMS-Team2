@@ -354,70 +354,96 @@ struct LessonInlineRow: View {
         @State private var navigateToQuizEditor = false
         @State private var navigateToContentEditor = false
         @State private var isImporting = false
+
+        @State private var showQuizEditor = false
+        @State private var showContentEditor = false
+
         
         var body: some View {
-            HStack(spacing: 12) {
-                // Content Type Icon
-                ZStack {
-                    Circle()
-                        .fill(Color.blue.opacity(0.1))
-                        .frame(width: 36, height: 36)
-                    
-                    Image(systemName: lesson.type.icon)
-                        .font(.system(size: 16))
-                        .foregroundColor(.blue)
-                }
-                
-                // Lesson Name and Type
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(lesson.title)
-                        .font(.subheadline)
-                        .foregroundColor(.primary)
-                    
-                    HStack(spacing: 4) {
-                        Text(lesson.type.shortName)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+            VStack(spacing: 8) {
+                // Top Row: Icon, Title, and Delete Button
+                HStack(spacing: 12) {
+                    // Content Type Icon
+                    ZStack {
+                        Circle()
+                            .fill(Color.blue.opacity(0.1))
+                            .frame(width: 36, height: 36)
                         
-                        // Content status indicator next to type
-                        if lesson.hasContent {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
-                                .font(.system(size: 10))
+                        Image(systemName: lesson.type.icon)
+                            .font(.system(size: 16))
+                            .foregroundColor(.blue)
+                    }
+                    
+                    // Lesson Name and Type
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(lesson.title)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundColor(.primary)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                        
+                        HStack(spacing: 4) {
+                            Text(lesson.type.shortName)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            // Content status indicator next to type
+                            if lesson.hasContent {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                    .font(.system(size: 10))
+                            }
                         }
+                    }
+                    
+                    Spacer()
+                    
+                    // Delete Button
+                    Button(action: { showDeleteAlert = true }) {
+                        Image(systemName: "trash.circle.fill")
+                            .foregroundColor(.red)
+                            .font(.title3)
                     }
                 }
                 
-                Spacer()
-                
-                // Action Buttons
+                // Bottom Row: Action Buttons
                 HStack(spacing: 8) {
                     // Change Type Menu
                     Menu {
                         ForEach(ContentType.allCases) { type in
                             Button(action: {
                                 updateLessonContentType(to: type)
-                                if type == .quiz {
-                                    navigateToQuizEditor = true
-                                } else {
-                                    navigateToContentEditor = true
+                                // Small delay to allow state update before navigation
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    if type == .quiz {
+                                        showQuizEditor = true
+                                    } else {
+                                        showContentEditor = true
+                                    }
                                 }
                             }) {
-                                Label(type.shortName, systemImage: type.icon)
+                                HStack {
+                                    Image(systemName: type.icon)
+                                    Text(type.shortName)
+                                    if lesson.type == type {
+                                        Spacer()
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
                             }
                         }
                     } label: {
-                        HStack(spacing: 3) {
+                        HStack(spacing: 6) {
                             Image(systemName: "ellipsis.circle")
-                                .font(.caption)
+                                .font(.subheadline)
                             Text("Type")
-                                .font(.caption.bold())
+                                .font(.subheadline.weight(.semibold))
                         }
                         .foregroundColor(.purple)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 4)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
                         .background(Color.purple.opacity(0.1))
-                        .cornerRadius(6)
+                        .cornerRadius(8)
                     }
                     
                     // Upload Button (Quiz Only)
@@ -440,51 +466,47 @@ struct LessonInlineRow: View {
                     // Edit Button
                     Button(action: {
                         if lesson.type == .quiz {
-                            navigateToQuizEditor = true
+                            showQuizEditor = true
                         } else {
-                            navigateToContentEditor = true
+                            showContentEditor = true
                         }
                     }) {
-                        HStack(spacing: 3) {
+                        HStack(spacing: 6) {
                             Image(systemName: "pencil.circle")
-                                .font(.caption)
+                                .font(.subheadline)
                             Text("Edit")
-                                .font(.caption.bold())
+                                .font(.subheadline.weight(.semibold))
                         }
                         .foregroundColor(.blue)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 4)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
                         .background(Color.blue.opacity(0.1))
-                        .cornerRadius(6)
+                        .cornerRadius(8)
                     }
                 }
-                
-                // Delete Button
-                Button(action: { showDeleteAlert = true }) {
-                    Image(systemName: "trash.circle.fill")
-                        .foregroundColor(.red)
-                        .font(.body)
+            }
+            .padding(12)
+            .background(Color(uiColor: .tertiarySystemGroupedBackground))
+            .cornerRadius(12)
+            .padding(.horizontal)
+            .sheet(isPresented: $showQuizEditor) {
+                NavigationView {
+                    LessonQuizEditorView(
+                        viewModel: viewModel,
+                        moduleID: moduleID,
+                        lessonID: lesson.id,
+                        lessonTitle: lesson.title
+                    )
                 }
             }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(Color(uiColor: .tertiarySystemGroupedBackground))
-            .cornerRadius(8)
-            .padding(.horizontal)
-            .navigationDestination(isPresented: $navigateToQuizEditor) {
-                LessonQuizEditorView(
-                    viewModel: viewModel,
-                    moduleID: moduleID,
-                    lessonID: lesson.id,
-                    lessonTitle: lesson.title
-                )
-            }
-            .navigationDestination(isPresented: $navigateToContentEditor) {
-                LessonContentEditorView(
-                    viewModel: viewModel,
-                    moduleID: moduleID,
-                    lessonID: lesson.id
-                )
+            .sheet(isPresented: $showContentEditor) {
+                NavigationView {
+                    LessonContentEditorView(
+                        viewModel: viewModel,
+                        moduleID: moduleID,
+                        lessonID: lesson.id
+                    )
+                }
             }
             .alert("Delete Lesson", isPresented: $showDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
