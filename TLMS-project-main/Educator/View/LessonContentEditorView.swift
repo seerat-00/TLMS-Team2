@@ -95,7 +95,12 @@ struct LessonContentEditorView: View {
                             )
                             
                         case .quiz:
-                            QuizPlaceholderView()
+                            QuizPlaceholderView(
+                                viewModel: viewModel,
+                                moduleID: moduleID,
+                                lessonID: lessonID,
+                                lessonTitle: currentLesson.title
+                            )
                         }
                         
                         // Save Button
@@ -415,6 +420,11 @@ struct MediaContentEditor: View {
 // MARK: - Quiz Placeholder
 
 struct QuizPlaceholderView: View {
+    @ObservedObject var viewModel: CourseCreationViewModel
+    let moduleID: UUID
+    let lessonID: UUID
+    let lessonTitle: String
+    
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "questionmark.circle.fill")
@@ -429,6 +439,23 @@ struct QuizPlaceholderView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
+            
+            NavigationLink(destination: LessonQuizEditorView(
+                viewModel: viewModel,
+                moduleID: moduleID,
+                lessonID: lessonID,
+                lessonTitle: lessonTitle
+            )) {
+                Text("Open Quiz Editor")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(AppTheme.primaryBlue)
+                    .cornerRadius(8)
+            }
+            .padding(.horizontal, 40)
+            .padding(.top, 8)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
