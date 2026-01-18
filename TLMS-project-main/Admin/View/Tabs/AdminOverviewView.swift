@@ -18,17 +18,19 @@ struct AdminOverviewView: View {
     @State private var selectedTimeFilter: AnalyticsTimeFilter = .last30Days
     
     // Computed Stats
-    var filteredRevenue: Double {
-        let filtered = allEnrollments.filter {
+    var filteredEnrollments: [Enrollment] {
+        allEnrollments.filter {
             if let date = $0.enrolledAt {
                 return selectedTimeFilter.isDateInPeriod(date)
             }
             return false
         }
-        
+    }
+    
+    var filteredRevenue: Double {
         let coursePriceMap = Dictionary(uniqueKeysWithValues: activeCourses.map { ($0.id, $0.price ?? 0) })
         
-        let total = filtered.reduce(0) { total, enrollment in
+        let total = filteredEnrollments.reduce(0) { total, enrollment in
             total + (coursePriceMap[enrollment.courseID] ?? 0)
         }
         
@@ -39,13 +41,12 @@ struct AdminOverviewView: View {
         activeCourses.filter { selectedTimeFilter.isDateInPeriod($0.createdAt) }.count
     }
     
-    var filteredLearnersCount: Int {
-        allUsers.filter { $0.role == .learner && selectedTimeFilter.isDateInPeriod($0.createdAt) }.count
+    var avgEnrollmentValue: Double {
+        guard !filteredEnrollments.isEmpty else { return 0 }
+        return filteredRevenue / Double(filteredEnrollments.count)
     }
     
-    var filteredEducatorsCount: Int {
-        allUsers.filter { $0.role == .educator && selectedTimeFilter.isDateInPeriod($0.createdAt) }.count
-    }
+
     
     var body: some View {
         NavigationStack {
@@ -81,21 +82,21 @@ struct AdminOverviewView: View {
                             )
                             .frame(width: 170, height: 140)
                             
-                            let split = RevenueCalculator.calculateSplit(total: filteredRevenue)
+
                             
                             AdminStatCard(
-                                icon: "building.columns.fill",
-                                title: "Admin (20%)",
-                                value: isRevenueEnabled ? split.admin.formatted(.currency(code: "INR")) : "--",
-                                color: AppTheme.primaryBlue
+                                icon: "person.2.fill",
+                                title: "Enrollments",
+                                value: "\(filteredEnrollments.count)",
+                                color: .purple
                             )
                             .frame(width: 170, height: 140)
                             
                             AdminStatCard(
-                                icon: "person.crop.circle.badge.checkmark",
-                                title: "Educators (80%)",
-                                value: isRevenueEnabled ? split.educator.formatted(.currency(code: "INR")) : "--",
-                                color: Color.purple
+                                icon: "chart.bar.fill",
+                                title: "Avg. Value",
+                                value: isRevenueEnabled ? avgEnrollmentValue.formatted(.currency(code: "INR")) : "--",
+                                color: .indigo
                             )
                             .frame(width: 170, height: 140)
                             
@@ -103,22 +104,6 @@ struct AdminOverviewView: View {
                                 icon: "book.fill",
                                 title: "Courses",
                                 value: "\(filteredCoursesCount)",
-                                color: .orange
-                            )
-                            .frame(width: 170, height: 140)
-                            
-                            AdminStatCard(
-                                icon: "person.2.fill",
-                                title: "Learners",
-                                value: "\(filteredLearnersCount)",
-                                color: AppTheme.successGreen
-                            )
-                            .frame(width: 170, height: 140)
-                            
-                            AdminStatCard(
-                                icon: "graduationcap.fill",
-                                title: "Educators",
-                                value: "\(filteredEducatorsCount)",
                                 color: .orange
                             )
                             .frame(width: 170, height: 140)
@@ -133,8 +118,8 @@ struct AdminOverviewView: View {
                         totalRevenue: filteredRevenue,
                         adminRevenue: split.admin,
                         educatorRevenue: split.educator,
-                        totalLearners: filteredLearnersCount,
-                        totalEducators: filteredEducatorsCount,
+                        totalLearners: allUsers.filter { $0.role == .learner && selectedTimeFilter.isDateInPeriod($0.createdAt) }.count,
+                        totalEducators: allUsers.filter { $0.role == .educator && selectedTimeFilter.isDateInPeriod($0.createdAt) }.count,
                         showRevenue: isRevenueEnabled
                     )
                     .padding(.top, 20)
