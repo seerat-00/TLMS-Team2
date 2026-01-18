@@ -234,6 +234,8 @@ struct Lesson: Identifiable, Codable {
     var type: ContentType
     var duration: TimeInterval?
     var quizQuestions: [Question]? // Quiz questions when type is .quiz
+    var quizTimeLimit: Int? // Time limit in minutes
+    var quizPassingScore: Int? // Passing score percentage (0-100)
     
     // Additional content properties
     var contentDescription: String? // Description for video/pdf/presentation content

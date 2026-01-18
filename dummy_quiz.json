@@ -1,0 +1,44 @@
+[
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174000",
+    "text": "Which keyword is used to declare a constant in Swift?",
+    "type": "Single Choice",
+    "options": [
+      "var",
+      "let",
+      "const",
+      "final"
+    ],
+    "correctAnswerIndices": [
+      1
+    ],
+    "points": 1,
+    "requiresManualGrading": false
+  },
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174001",
+    "text": "Which of the following are value types in Swift? (Select all that apply)",
+    "type": "Multiple Choice",
+    "options": [
+      "Class",
+      "Struct",
+      "Enum",
+      "Closure"
+    ],
+    "correctAnswerIndices": [
+      1,
+      2
+    ],
+    "points": 2,
+    "requiresManualGrading": false
+  },
+  {
+    "id": "123e4567-e89b-12d3-a456-426614174002",
+    "text": "Explain the difference between 'frame' and 'bounds' in UIKit.",
+    "type": "Descriptive",
+    "options": [],
+    "correctAnswerIndices": [],
+    "points": 5,
+    "requiresManualGrading": true
+  }
+]

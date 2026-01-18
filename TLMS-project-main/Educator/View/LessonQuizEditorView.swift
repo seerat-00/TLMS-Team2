@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct LessonQuizEditorView: View {
     @ObservedObject var viewModel: CourseCreationViewModel
@@ -14,6 +15,10 @@ struct LessonQuizEditorView: View {
     let lessonTitle: String
     
     @State private var questions: [Question] = []
+    @State private var timeLimit: Int = 30 // Default 30 minutes
+    @State private var passingScore: Int = 70 // Default 70%
+    @State private var isImporting = false
+    
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -36,6 +41,60 @@ struct LessonQuizEditorView: View {
                     .padding(.horizontal)
                     .padding(.top)
                     
+                    // Quiz Settings
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Settings")
+                            .font(.title2.bold())
+                            .padding(.horizontal)
+                        
+                        VStack(spacing: 16) {
+                            // Time Limit
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "clock")
+                                        .foregroundColor(AppTheme.secondaryText)
+                                    Text("Time Limit")
+                                        .font(.headline)
+                                    Spacer()
+                                    Text("\(timeLimit) min")
+                                        .foregroundColor(AppTheme.primaryBlue)
+                                        .bold()
+                                }
+                                
+                                Stepper(value: $timeLimit, in: 5...180, step: 5) {
+                                    Text("Duration")
+                                }
+                                .onChange(of: timeLimit) { _, _ in updateSettings() }
+                            }
+                            .padding()
+                            .background(Color(uiColor: .secondarySystemGroupedBackground))
+                            .cornerRadius(AppTheme.cornerRadius)
+                            
+                            // Passing Score
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "checkmark.seal")
+                                        .foregroundColor(AppTheme.secondaryText)
+                                    Text("Passing Score")
+                                        .font(.headline)
+                                    Spacer()
+                                    Text("\(passingScore)%")
+                                        .foregroundColor(AppTheme.primaryBlue)
+                                        .bold()
+                                }
+                                
+                                Stepper(value: $passingScore, in: 0...100, step: 5) {
+                                    Text("Percentage")
+                                }
+                                .onChange(of: passingScore) { _, _ in updateSettings() }
+                            }
+                            .padding()
+                            .background(Color(uiColor: .secondarySystemGroupedBackground))
+                            .cornerRadius(AppTheme.cornerRadius)
+                        }
+                        .padding(.horizontal)
+                    }
+                    
                     // Questions List
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
@@ -43,6 +102,22 @@ struct LessonQuizEditorView: View {
                                 .font(.title2.bold())
                             
                             Spacer()
+                            
+                            Button(action: {
+                                isImporting = true
+                            }) {
+                                Label("Upload Questions", systemImage: "square.and.arrow.down")
+                                    .font(.subheadline.bold())
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(AppTheme.secondaryGroupedBackground)
+                                    .foregroundColor(AppTheme.primaryText)
+                                    .overlay(
+                                   RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                                    .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+                                )
+                                    .cornerRadius(AppTheme.cornerRadius)
+                            }
                             
                             Button(action: {
                                 viewModel.addQuestionToLesson(moduleID: moduleID, lessonID: lessonID)
@@ -116,12 +191,57 @@ struct LessonQuizEditorView: View {
         .navigationTitle(lessonTitle)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            loadQuestions()
+            loadData()
+        }
+        .fileImporter(
+            isPresented: $isImporting,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                guard let url = urls.first else { return }
+                // Start accessing security scoped resource
+                guard url.startAccessingSecurityScopedResource() else { return }
+                
+                Task {
+                    let success = await viewModel.importQuestions(from: url, to: moduleID, lessonID: lessonID)
+                    if success {
+                        await MainActor.run {
+                            loadQuestions()
+                        }
+                    }
+                    url.stopAccessingSecurityScopedResource()
+                }
+            case .failure(let error):
+                print("Import failed: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    private func loadData() {
+        // Load questions
+        questions = viewModel.getQuizQuestions(moduleID: moduleID, lessonID: lessonID)
+        
+        // Load settings from course model
+        if let module = viewModel.newCourse.modules.first(where: { $0.id == moduleID }),
+           let lesson = module.lessons.first(where: { $0.id == lessonID }) {
+            if let existingTimeLimit = lesson.quizTimeLimit {
+                timeLimit = existingTimeLimit
+            }
+            if let existingPassingScore = lesson.quizPassingScore {
+                passingScore = existingPassingScore
+            }
         }
     }
     
     private func loadQuestions() {
+        // Helper specifically for questions when updated
         questions = viewModel.getQuizQuestions(moduleID: moduleID, lessonID: lessonID)
+    }
+    
+    private func updateSettings() {
+        viewModel.updateLessonQuizSettings(moduleID: moduleID, lessonID: lessonID, timeLimit: timeLimit, passingScore: passingScore)
     }
     
     private var canSaveQuiz: Bool {
