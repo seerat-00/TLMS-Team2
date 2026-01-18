@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct CourseStructureView: View {
     @ObservedObject var viewModel: CourseCreationViewModel
@@ -353,7 +352,6 @@ struct LessonInlineRow: View {
         @State private var showDeleteAlert = false
         @State private var navigateToQuizEditor = false
         @State private var navigateToContentEditor = false
-        @State private var isImporting = false
         
         var body: some View {
             HStack(spacing: 12) {
@@ -420,23 +418,6 @@ struct LessonInlineRow: View {
                         .cornerRadius(6)
                     }
                     
-                    // Upload Button (Quiz Only)
-                    if lesson.type == .quiz {
-                        Button(action: { isImporting = true }) {
-                            HStack(spacing: 3) {
-                                Image(systemName: "square.and.arrow.down")
-                                    .font(.caption)
-                                Text("Upload")
-                                    .font(.caption.bold())
-                            }
-                            .foregroundColor(.orange)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 4)
-                            .background(Color.orange.opacity(0.1))
-                            .cornerRadius(6)
-                        }
-                    }
-
                     // Edit Button
                     Button(action: {
                         if lesson.type == .quiz {
@@ -465,27 +446,38 @@ struct LessonInlineRow: View {
                         .foregroundColor(.red)
                         .font(.body)
                 }
+                
+                // Hidden NavigationLinks for programmatic navigation
+                NavigationLink(
+                    destination: LessonQuizEditorView(
+                        viewModel: viewModel,
+                        moduleID: moduleID,
+                        lessonID: lesson.id,
+                        lessonTitle: lesson.title
+                    ),
+                    isActive: $navigateToQuizEditor
+                ) {
+                    EmptyView()
+                }
+                .hidden()
+                
+                NavigationLink(
+                    destination: LessonContentEditorView(
+                        viewModel: viewModel,
+                        moduleID: moduleID,
+                        lessonID: lesson.id
+                    ),
+                    isActive: $navigateToContentEditor
+                ) {
+                    EmptyView()
+                }
+                .hidden()
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
             .background(Color(uiColor: .tertiarySystemGroupedBackground))
             .cornerRadius(8)
             .padding(.horizontal)
-            .navigationDestination(isPresented: $navigateToQuizEditor) {
-                LessonQuizEditorView(
-                    viewModel: viewModel,
-                    moduleID: moduleID,
-                    lessonID: lesson.id,
-                    lessonTitle: lesson.title
-                )
-            }
-            .navigationDestination(isPresented: $navigateToContentEditor) {
-                LessonContentEditorView(
-                    viewModel: viewModel,
-                    moduleID: moduleID,
-                    lessonID: lesson.id
-                )
-            }
             .alert("Delete Lesson", isPresented: $showDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
@@ -496,24 +488,6 @@ struct LessonInlineRow: View {
                 }
             } message: {
                 Text("Are you sure you want to delete this lesson?")
-            }
-            .fileImporter(
-                isPresented: $isImporting,
-                allowedContentTypes: [.json],
-                allowsMultipleSelection: false
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    guard let url = urls.first else { return }
-                    guard url.startAccessingSecurityScopedResource() else { return }
-                    
-                    Task {
-                        _ = await viewModel.importQuestions(from: url, to: moduleID, lessonID: lesson.id)
-                        url.stopAccessingSecurityScopedResource()
-                    }
-                case .failure(let error):
-                    print("Import failed: \(error.localizedDescription)")
-                }
             }
         }
         

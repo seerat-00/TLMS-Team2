@@ -1,4 +1,3 @@
-
 //
 //  LearnerCourseDetailView.swift
 //  TLMS-project-main
@@ -40,18 +39,17 @@ struct LearnerCourseDetailView: View {
             } else {
                 ScrollView {
                     VStack(spacing: 24) {
-                        
-                        // MARK: - Header
+                        // Header
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Course")
                                         .font(.caption)
                                         .foregroundColor(AppTheme.secondaryText)
-                                    
                                     Text(course.category)
                                         .font(.subheadline.bold())
                                         .foregroundColor(AppTheme.primaryBlue)
+                                        .lineLimit(1)
                                 }
                                 
                                 Spacer()
@@ -64,14 +62,17 @@ struct LearnerCourseDetailView: View {
                                         .background(AppTheme.successGreen.opacity(0.1))
                                         .foregroundColor(AppTheme.successGreen)
                                         .cornerRadius(8)
-                                } else if isPaidCourse, let price = course.price {
-                                    Text(price.formatted(.currency(code: "INR")))
-                                        .font(.title3.bold())
-                                        .foregroundColor(AppTheme.primaryBlue)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(AppTheme.primaryBlue.opacity(0.1))
-                                        .cornerRadius(8)
+                                } else if isPaidCourse {
+                                    // Show price badge
+                                    if let price = course.price {
+                                        Text(price.formatted(.currency(code: "INR")))
+                                            .font(.title3.bold())
+                                            .foregroundColor(AppTheme.primaryBlue)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 6)
+                                            .background(AppTheme.primaryBlue.opacity(0.1))
+                                            .cornerRadius(8)
+                                    }
                                 }
                             }
                             
@@ -79,11 +80,13 @@ struct LearnerCourseDetailView: View {
                             
                             Text(course.title)
                                 .font(.title2.bold())
+                                .foregroundColor(AppTheme.primaryText)
                             
                             Text(course.description)
                                 .font(.body)
                                 .foregroundColor(AppTheme.secondaryText)
                             
+                            // Metadata
                             HStack(spacing: 16) {
                                 Label("\(course.modules.count) Modules", systemImage: "book.fill")
                                 
@@ -105,16 +108,19 @@ struct LearnerCourseDetailView: View {
                         .padding()
                         .background(AppTheme.secondaryGroupedBackground)
                         .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
                         .padding(.horizontal)
                         
-                        // MARK: - Course Content
+                        // Content Preview
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Course Content")
                                 .font(.title3.bold())
+                                .foregroundColor(AppTheme.primaryText)
                                 .padding(.horizontal)
                             
                             if course.modules.isEmpty {
                                 Text("No content available yet.")
+                                    .font(.subheadline)
                                     .foregroundColor(AppTheme.secondaryText)
                                     .padding(.horizontal)
                             } else {
@@ -137,7 +143,7 @@ struct LearnerCourseDetailView: View {
                             }
                         }
                         
-                        Spacer(minLength: 80)
+                        Spacer(minLength: 80) // Space for bottom bar
                     }
                     .padding(.top)
                 }
@@ -148,13 +154,7 @@ struct LearnerCourseDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
             if !isEnrolled {
-                CourseEnrollmentBottomBar(
-                    course: course,
-                    isPaidCourse: isPaidCourse,
-                    isEnrolling: isEnrolling,
-                    isLoading: paymentService.isLoading,
-                    onAction: handleEnrollmentAction
-                )
+                enrollmentBottomBar
             }
         }
         .sheet(isPresented: $showPaymentSheet) {
@@ -163,20 +163,7 @@ struct LearnerCourseDetailView: View {
                     paymentURL: url,
                     onSuccess: { paymentId in
                         Task {
-                            await CoursePaymentHandler.verifyPayment(
-                                orderId: currentOrderId ?? "",
-                                paymentId: paymentId,
-                                course: course,
-                                userId: userId,
-                                paymentService: paymentService,
-                                onSuccess: {
-                                    dismiss()
-                                },
-                                onError: {
-                                    errorMessage = $0
-                                    showError = true
-                                }
-                            )
+                            await handlePaymentSuccess(paymentId: paymentId)
                         }
                     },
                     onFailure: {
@@ -193,28 +180,56 @@ struct LearnerCourseDetailView: View {
         }
     }
     
+    // MARK: - Enrollment Bottom Bar
+    
+    private var enrollmentBottomBar: some View {
+        VStack {
+            Divider()
+            HStack {
+                Button(action: handleEnrollmentAction) {
+                    HStack {
+                        if isEnrolling || paymentService.isLoading {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            if isPaidCourse, let price = course.price {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "cart.fill")
+                                    Text("Buy Now - \(price.formatted(.currency(code: "INR")))")
+                                }
+                                .font(.headline)
+                            } else {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                    Text("Enroll Free")
+                                }
+                                .font(.headline)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(AppTheme.primaryBlue)
+                    .foregroundColor(.white)
+                    .cornerRadius(AppTheme.cornerRadius)
+                }
+                .disabled(isEnrolling || paymentService.isLoading)
+            }
+            .padding()
+            .background(AppTheme.secondaryGroupedBackground)
+        }
+    }
+    
     // MARK: - Actions
     
     private func handleEnrollmentAction() {
         if isPaidCourse {
+            // Initiate payment
             Task {
-                await CoursePaymentHandler.initiatePayment(
-                    course: course,
-                    userId: userId,
-                    authService: authService,
-                    paymentService: paymentService,
-                    setOrderId: { currentOrderId = $0 },
-                    setPaymentURL: {
-                        paymentURL = $0
-                        showPaymentSheet = true
-                    },
-                    onError: {
-                        errorMessage = $0
-                        showError = true
-                    }
-                )
+                await initiatePayment()
             }
         } else {
+            // Free enrollment
             Task {
                 isEnrolling = true
                 await onEnroll()
@@ -223,4 +238,60 @@ struct LearnerCourseDetailView: View {
             }
         }
     }
+    
+    private func initiatePayment() async {
+        guard let price = course.price else { return }
+        guard let user = authService.currentUser else { return }
+        
+        // Create payment order
+        if let order = await paymentService.createPaymentOrder(
+            courseId: course.id,
+            userId: userId,
+            amount: price
+        ) {
+            // Save the order ID for verification
+            self.currentOrderId = order.orderId
+            
+            // Generate payment URL
+            if let url = paymentService.getPaymentURL(
+                order: order,
+                userEmail: user.email,
+                userName: user.fullName
+            ) {
+                paymentURL = url
+                showPaymentSheet = true
+            } else {
+                errorMessage = "Failed to generate payment link"
+                showError = true
+            }
+        } else {
+            errorMessage = paymentService.errorMessage ?? "Failed to create payment order"
+            showError = true
+        }
+    }
+    
+    private func handlePaymentSuccess(paymentId: String) async {
+        // Verify payment and enroll
+        guard let orderId = currentOrderId else {
+            errorMessage = "Order ID validation failed"
+            showError = true
+            return
+        }
+        
+        let success = await paymentService.verifyPayment(
+            orderId: orderId,
+            paymentId: paymentId,
+            courseId: course.id,
+            userId: userId
+        )
+        
+        if success {
+            // User is already enrolled by verifyPayment, just dismiss
+            dismiss()
+        } else {
+            errorMessage = paymentService.errorMessage ?? "Payment verification failed"
+            showError = true
+        }
+    }
 }
+

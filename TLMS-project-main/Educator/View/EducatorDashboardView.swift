@@ -2,7 +2,7 @@
 //  EducatorDashboardView.swift
 //  TLMS-project-main
 //
-//  High-fidelity Educator Landing Screen with Tab Navigation
+//  High-fidelity Educator Landing Screen
 //
 
 import SwiftUI
@@ -11,53 +11,12 @@ struct EducatorDashboardView: View {
     let user: User
     @EnvironmentObject var authService: AuthService
     @StateObject private var viewModel = EducatorDashboardViewModel()
-    @State private var selectedTab = 0
+    @State private var showProfile = false
     @State private var showCreateCourse = false
     @State private var courseToEdit: DashboardCourse? = nil
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        TabView(selection: $selectedTab) {
-            // Dashboard Tab
-            dashboardContent
-                .tabItem {
-                    Label("Dashboard", systemImage: "chart.bar.doc.horizontal")
-                }
-                .tag(0)
-            
-            // Profile Tab
-            EducatorProfileView(user: user)
-                .tabItem {
-                    Label("Profile", systemImage: "person.crop.circle")
-                }
-                .tag(1)
-        }
-        .tint(AppTheme.primaryBlue)
-        .toolbarBackground(.visible, for: .tabBar)
-        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
-        .toolbarColorScheme(.dark, for: .tabBar) // Ensure contrast
-        .fullScreenCover(isPresented: $showCreateCourse, onDismiss: {
-            // Refresh dashboard when course creation is dismissed
-            courseToEdit = nil
-            Task {
-                await viewModel.loadData(educatorID: user.id)
-            }
-        }) {
-            NavigationView {
-                if let courseToEdit = courseToEdit {
-                    // Editing existing draft course
-                    CreateCourseView(viewModel: CourseCreationViewModel(educatorID: user.id, existingCourse: courseToEdit))
-                } else {
-                    // Creating new course
-                    CreateCourseView(viewModel: CourseCreationViewModel(educatorID: user.id))
-                }
-            }
-        }
-    }
-    
-    // MARK: - Dashboard Content
-    
-    private var dashboardContent: some View {
         NavigationView {
             ZStack {
                 // Professional background
@@ -99,21 +58,60 @@ struct EducatorDashboardView: View {
             .navigationTitle("Educator Dashboard")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                     // Removed Menu button as functionality is now in Profile Tab or refresh
-                    Button(action: {
-                        Task {
-                            await viewModel.loadData(educatorID: user.id)
+                    Menu {
+                        Button(action: { showProfile = true }) {
+                            Label("Profile", systemImage: "person.circle")
                         }
-                    }) {
-                        Label("Refresh", systemImage: "arrow.clockwise")
+                        
+                        Divider()
+                        
+                        Button(action: {
+                            Task {
+                                await viewModel.loadData(educatorID: user.id)
+                            }
+                        }) {
+                            Label("Refresh", systemImage: "arrow.clockwise")
+                        }
+                        
+                        Divider()
+                        
+                        Button(role: .destructive, action: handleLogout) {
+                            Label("Sign Out", systemImage: "arrow.right.square")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(AppTheme.primaryBlue)
                     }
                 }
             }
         }
         .navigationViewStyle(.stack)
+        .id(user.id)
         .task {
             await viewModel.loadData(educatorID: user.id)
         }
+        .fullScreenCover(isPresented: $showCreateCourse, onDismiss: {
+            // Refresh dashboard when course creation is dismissed
+            courseToEdit = nil
+            Task {
+                await viewModel.loadData(educatorID: user.id)
+            }
+        }) {
+            NavigationView {
+                if let courseToEdit = courseToEdit {
+                    // Editing existing draft course
+                    CreateCourseView(viewModel: CourseCreationViewModel(educatorID: user.id, existingCourse: courseToEdit))
+                } else {
+                    // Creating new course
+                    CreateCourseView(viewModel: CourseCreationViewModel(educatorID: user.id))
+                }
+            }
+        }
+        .sheet(isPresented: $showProfile) {
+            EducatorProfileView(user: user)
+        }
+
     }
     
     // MARK: - Header Section
@@ -133,8 +131,7 @@ struct EducatorDashboardView: View {
             
             // Welcome Text
             VStack(alignment: .leading, spacing: 4) {
-                Text(authService.entryPoint == .signup ? "Welcome," : "Welcome back,")
-
+                Text("Welcome back,")
                     .font(.subheadline)
                     .foregroundColor(AppTheme.secondaryText)
                 
@@ -163,53 +160,20 @@ struct EducatorDashboardView: View {
     // MARK: - Stats Section
     
     private var statsSection: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 16) {
-                StatGlassCard(
-                    icon: "book.fill",
-                    title: "Courses",
-                    value: "\(viewModel.totalCourses)",
-                    color: AppTheme.primaryBlue
-                )
-                
-                StatGlassCard(
-                    icon: "person.3.fill",
-                    title: "Enrollments",
-                    value: "\(viewModel.totalEnrollments)",
-                    color: AppTheme.successGreen
-                )
-            }
+        HStack(spacing: 16) {
+            StatGlassCard(
+                icon: "book.fill",
+                title: "Courses",
+                value: "\(viewModel.totalCourses)",
+                color: AppTheme.primaryBlue
+            )
             
-            // Quiz Results Card with Navigation
-            NavigationLink(destination: QuizResultsListView(educatorID: user.id)) {
-                HStack(spacing: 12) {
-                    Image(systemName: "chart.bar.doc.horizontal.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(.purple)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("\(viewModel.totalQuizSubmissions)")
-                            .font(.title2.bold())
-                            .foregroundColor(AppTheme.primaryText)
-                        
-                        Text("Quiz Submissions")
-                            .font(.subheadline)
-                            .foregroundColor(AppTheme.secondaryText)
-                    }
-                    
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(AppTheme.secondaryText)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(16)
-                .background(AppTheme.secondaryGroupedBackground)
-                .cornerRadius(AppTheme.cornerRadius)
-                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-            }
-            .buttonStyle(PlainButtonStyle())
+            StatGlassCard(
+                icon: "person.3.fill",
+                title: "Enrollments",
+                value: "\(viewModel.totalEnrollments)",
+                color: AppTheme.successGreen
+            )
         }
     }
     
@@ -328,6 +292,16 @@ struct EducatorDashboardView: View {
         }
         .padding(.top, 8)
     }
+    
+
+    
+
+    
+    private func handleLogout() {
+        Task {
+            await authService.signOut()
+        }
+    }
 }
 
 // MARK: - Stat Card
@@ -396,7 +370,7 @@ struct CourseGlassCard: View {
                     // Status Badge
                     HStack(spacing: 4) {
                         Image(systemName: course.status.icon)
-                        .font(.caption2)
+                            .font(.caption2)
                         Text(course.status.displayName)
                             .font(.caption2.weight(.medium))
                     }

@@ -40,4 +40,3 @@ struct CategoryCard: View {
         .shadow(color: color.opacity(0.3), radius: 8, x: 0, y: 4)
     }
 }
-

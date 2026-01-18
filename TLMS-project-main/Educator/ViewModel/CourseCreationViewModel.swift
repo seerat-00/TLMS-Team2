@@ -162,43 +162,6 @@ class CourseCreationViewModel: ObservableObject {
         newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions = questions
     }
     
-    func updateLessonQuizSettings(moduleID: UUID, lessonID: UUID, timeLimit: Int?, passingScore: Int?) {
-        guard let moduleIndex = newCourse.modules.firstIndex(where: { $0.id == moduleID }),
-              let lessonIndex = newCourse.modules[moduleIndex].lessons.firstIndex(where: { $0.id == lessonID }) else {
-            return
-        }
-        
-        newCourse.modules[moduleIndex].lessons[lessonIndex].quizTimeLimit = timeLimit
-        newCourse.modules[moduleIndex].lessons[lessonIndex].quizPassingScore = passingScore
-    }
-    
-    func importQuestions(from url: URL, to moduleID: UUID, lessonID: UUID) async -> Bool {
-        guard let moduleIndex = newCourse.modules.firstIndex(where: { $0.id == moduleID }),
-              let lessonIndex = newCourse.modules[moduleIndex].lessons.firstIndex(where: { $0.id == lessonID }) else {
-            return false
-        }
-        
-        do {
-            let data = try Data(contentsOf: url)
-            let questions = try JSONDecoder().decode([Question].self, from: data)
-            
-            // Ensure questions have unique IDs if needed, or trust the import
-            var validQuestions = questions
-            for i in 0..<validQuestions.count {
-                validQuestions[i].id = UUID() // Generate new IDs to avoid conflicts
-            }
-            
-            if newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions == nil {
-                newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions = []
-            }
-            newCourse.modules[moduleIndex].lessons[lessonIndex].quizQuestions?.append(contentsOf: validQuestions)
-            return true
-        } catch {
-            print("Failed to import questions: \(error)")
-            return false
-        }
-    }
-    
     // MARK: - Lesson Content Management
     
     func updateLessonTextContent(moduleID: UUID, lessonID: UUID, textContent: String) {

@@ -303,8 +303,8 @@
 				DEVELOPMENT_TEAM = 8W3X4V83AW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "to share photos";
 				INFOPLIST_FILE = "TLMS-project-main/Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "to share photos";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -337,8 +337,8 @@
 				DEVELOPMENT_TEAM = 8W3X4V83AW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "to share photos";
 				INFOPLIST_FILE = "TLMS-project-main/Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "to share photos";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

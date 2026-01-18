@@ -57,7 +57,7 @@ struct CategoryCourseCard: View {
                     // Module Count
                     HStack(spacing: 4) {
                         Image(systemName: "list.bullet")
-                            .font(.system(size: 10))
+                        .font(.system(size: 10))
                         Text("\(course.modules.count)")
                             .font(.caption)
                     }
@@ -87,4 +87,3 @@ struct CategoryCourseCard: View {
         .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 }
-

@@ -1,19 +1,18 @@
 //
-//  LessonQuizEditorView.swift
+//  QuizQuestionsView.swift
 //  TLMS-project-main
 //
-//  Quiz editor for lessons within course structure
+//  Step 2: Quiz Questions Management
 //
 
 import SwiftUI
 
-struct LessonQuizEditorView: View {
-    @ObservedObject var viewModel: CourseCreationViewModel
-    let moduleID: UUID
-    let lessonID: UUID
-    let lessonTitle: String
-    
-    @State private var questions: [Question] = []
+struct QuizQuestionsView: View {
+    @ObservedObject var viewModel: QuizCreationViewModel
+    @State private var editingQuestionID: UUID?
+    @State private var showSuccessBanner = false
+    @State private var successMessage = ""
+    @State private var isProcessing = false
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -25,8 +24,18 @@ struct LessonQuizEditorView: View {
                 VStack(spacing: 24) {
                     // Header
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(lessonTitle)
+                        Text(viewModel.newQuiz.title)
                             .font(.largeTitle.bold())
+                        
+                        if let course = viewModel.selectedCourse {
+                            HStack {
+                                Image(systemName: "book.fill")
+                                    .font(.caption)
+                                Text(course.title)
+                                    .font(.subheadline)
+                            }
+                            .foregroundColor(AppTheme.secondaryText)
+                        }
                         
                         Text("Add questions to assess learner knowledge")
                             .font(.body)
@@ -45,8 +54,7 @@ struct LessonQuizEditorView: View {
                             Spacer()
                             
                             Button(action: {
-                                viewModel.addQuestionToLesson(moduleID: moduleID, lessonID: lessonID)
-                                loadQuestions()
+                                viewModel.addQuestion()
                             }) {
                                 Label("Add Question", systemImage: "plus")
                                     .font(.subheadline.bold())
@@ -59,26 +67,20 @@ struct LessonQuizEditorView: View {
                         }
                         .padding(.horizontal)
                         
-                        if questions.isEmpty {
+                        if viewModel.newQuiz.questions.isEmpty {
                             EmptyStateView(
                                 icon: "questionmark.circle",
                                 title: "No Questions Yet",
                                 message: "Add questions to create your quiz."
                             )
                         } else {
-                            ForEach(Array(questions.enumerated()), id: \.element.id) { index, question in
-                                LessonQuestionCard(
+                            ForEach(Array(viewModel.newQuiz.questions.enumerated()), id: \.element.id) { index, question in
+                                QuestionCard(
                                     question: question,
                                     questionNumber: index + 1,
-                                    moduleID: moduleID,
-                                    lessonID: lessonID,
                                     viewModel: viewModel,
                                     onDelete: {
-                                        viewModel.deleteQuestionFromLesson(moduleID: moduleID, lessonID: lessonID, questionIndex: index)
-                                        loadQuestions()
-                                    },
-                                    onUpdate: {
-                                        loadQuestions()
+                                        viewModel.deleteQuestion(at: index)
                                     }
                                 )
                             }
@@ -86,59 +88,147 @@ struct LessonQuizEditorView: View {
                     }
                     .padding(.bottom, 20)
                     
-                    // Save Button
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        HStack(spacing: 8) {
-                            Text("Done")
-                                .font(.headline)
-                            Image(systemName: "checkmark")
-                                .font(.headline)
+                    // Action Buttons
+                    VStack(spacing: 12) {
+                        // Preview Button
+                        NavigationLink(destination: QuizPreviewView(viewModel: viewModel)) {
+                            HStack(spacing: 8) {
+                                Text("Preview Quiz")
+                                    .font(.headline)
+                                Image(systemName: "eye")
+                                    .font(.headline)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(
+                                viewModel.canSaveQuiz ?
+                                AppTheme.primaryBlue :
+                                Color.gray.opacity(0.3)
+                            )
+                            .foregroundColor(.white)
+                            .cornerRadius(AppTheme.cornerRadius)
                         }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(
-                            canSaveQuiz ?
-                            AppTheme.primaryBlue :
-                            Color.gray.opacity(0.3)
-                        )
-                        .foregroundColor(.white)
-                        .cornerRadius(AppTheme.cornerRadius)
-                        .shadow(color: canSaveQuiz ? AppTheme.primaryBlue.opacity(0.3) : .clear, radius: 8, y: 4)
+                        .disabled(!viewModel.canSaveQuiz)
+                        
+                        // Save as Draft Button
+                        Button(action: {
+                            handleSaveAsDraft()
+                        }) {
+                            HStack(spacing: 8) {
+                                if isProcessing {
+                                    ProgressView()
+                                        .tint(.white)
+                                } else {
+                                    Text("Save as Draft")
+                                        .font(.headline)
+                                    Image(systemName: "doc.badge.plus")
+                                        .font(.headline)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(
+                                viewModel.canSaveQuiz ?
+                                Color.gray :
+                                Color.gray.opacity(0.3)
+                            )
+                            .foregroundColor(.white)
+                            .cornerRadius(AppTheme.cornerRadius)
+                        }
+                        .disabled(!viewModel.canSaveQuiz || isProcessing)
                     }
-                    .disabled(!canSaveQuiz)
                     .padding(.horizontal)
                     .padding(.bottom, 40)
                 }
             }
+            
+            // Success Banner
+            if showSuccessBanner {
+                VStack {
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.white)
+                        
+                        Text(successMessage)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        
+                        Spacer()
+                    }
+                    .padding()
+                    .background(AppTheme.successGreen)
+                    .cornerRadius(12)
+                    .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 5)
+                    .padding(.horizontal)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    
+                    Spacer()
+                }
+                .padding(.top, 8)
+            }
         }
-        .navigationTitle(lessonTitle)
+        .navigationTitle(viewModel.newQuiz.title)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            loadQuestions()
+        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+            Button("OK") {
+                viewModel.errorMessage = nil
+            }
+        } message: {
+            if let error = viewModel.errorMessage {
+                Text(error)
+            }
+        }
+        .overlay {
+            if viewModel.isLoading {
+                ZStack {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                    
+                    ProgressView("Saving quiz...")
+                        .padding()
+                        .background(AppTheme.secondaryGroupedBackground)
+                        .cornerRadius(AppTheme.cornerRadius)
+                }
+            }
         }
     }
     
-    private func loadQuestions() {
-        questions = viewModel.getQuizQuestions(moduleID: moduleID, lessonID: lessonID)
-    }
-    
-    private var canSaveQuiz: Bool {
-        !questions.isEmpty && questions.allSatisfy { $0.isValid }
+    private func handleSaveAsDraft() {
+        isProcessing = true
+        Task {
+            await viewModel.saveAsDraft()
+            
+            if let message = viewModel.saveSuccessMessage {
+                successMessage = message
+                withAnimation {
+                    showSuccessBanner = true
+                }
+                
+                // Wait a moment to show the banner
+                try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
+                
+                // Dismiss the entire modal back to dashboard
+                await MainActor.run {
+                    // Find and dismiss the root presentation
+                    if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                       let rootViewController = windowScene.windows.first?.rootViewController {
+                        rootViewController.dismiss(animated: true)
+                    }
+                }
+            }
+            isProcessing = false
+        }
     }
 }
 
-// MARK: - Lesson Question Card
+// MARK: - Question Card
 
-struct LessonQuestionCard: View {
+struct QuestionCard: View {
     @State var question: Question
     let questionNumber: Int
-    let moduleID: UUID
-    let lessonID: UUID
-    @ObservedObject var viewModel: CourseCreationViewModel
+    @ObservedObject var viewModel: QuizCreationViewModel
     let onDelete: () -> Void
-    let onUpdate: () -> Void
     
     @State private var isExpanded = true
     @State private var showDeleteAlert = false
@@ -257,7 +347,7 @@ struct LessonQuestionCard: View {
                                         }
                                         question.requiresManualGrading = false
                                     }
-                                    updateQuestion()
+                                    viewModel.updateQuestion(question)
                                 }) {
                                     HStack {
                                         Image(systemName: type.icon)
@@ -308,7 +398,7 @@ struct LessonQuestionCard: View {
                                 .scrollContentBackground(.hidden)
                                 .padding(4)
                                 .onChange(of: question.text) { _, _ in
-                                    updateQuestion()
+                                    viewModel.updateQuestion(question)
                                 }
                         }
                         .background(Color(uiColor: .tertiarySystemGroupedBackground))
@@ -336,7 +426,7 @@ struct LessonQuestionCard: View {
                                                 question.correctAnswerIndices.append(index)
                                             }
                                         }
-                                        updateQuestion()
+                                        viewModel.updateQuestion(question)
                                     }) {
                                         if question.type == .singleChoice {
                                             Image(systemName: question.correctAnswerIndices.contains(index) ? "checkmark.circle.fill" : "circle")
@@ -363,7 +453,7 @@ struct LessonQuestionCard: View {
                                                 }
                                                 question.options[index] = newValue
                                             }
-                                            updateQuestion()
+                                            viewModel.updateQuestion(question)
                                         }
                                     ))
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -412,7 +502,7 @@ struct LessonQuestionCard: View {
                                 get: { question.points },
                                 set: { newValue in
                                     question.points = max(1, newValue)
-                                    updateQuestion()
+                                    viewModel.updateQuestion(question)
                                 }
                             ), in: 1...10) {
                                 Text("\(question.points) point\(question.points == 1 ? "" : "s")")
@@ -438,20 +528,10 @@ struct LessonQuestionCard: View {
             Text("Are you sure you want to delete this question?")
         }
     }
-    
-    private func updateQuestion() {
-        viewModel.updateQuestionInLesson(moduleID: moduleID, lessonID: lessonID, question: question)
-        onUpdate()
-    }
 }
 
 #Preview {
     NavigationView {
-        LessonQuizEditorView(
-            viewModel: CourseCreationViewModel(educatorID: UUID()),
-            moduleID: UUID(),
-            lessonID: UUID(),
-            lessonTitle: "Python Basics Quiz"
-        )
+        QuizQuestionsView(viewModel: QuizCreationViewModel(educatorID: UUID()))
     }
 }
