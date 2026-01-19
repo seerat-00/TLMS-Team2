@@ -19,7 +19,9 @@ struct LearnerDashboardView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             // Browse Courses Tab
-            courseListView(courses: viewModel.publishedCourses, title: "Browse Courses", showSearch: false)
+            courseListView(courses: viewModel.publishedCourses.filter { course in
+                !viewModel.isEnrolled(course)
+            }, title: "Browse Courses", showSearch: false)
                 .tabItem {
                     Label("Browse", systemImage: "book.fill")
                 }
@@ -117,13 +119,27 @@ struct LearnerDashboardView: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(role: .destructive, action: handleLogout) {
-                        Label("Sign Out", systemImage: "arrow.right.square")
+                    Button(action: { showProfile = true }) {
+                        Image(systemName: "person.circle")
+                            .font(.system(size: 24))
+                            .foregroundColor(AppTheme.primaryBlue)
                     }
                 }
             }
+
+//            .toolbar {
+//                ToolbarItem(placement: .navigationBarTrailing) {
+//                    Button(role: .destructive, action: handleLogout) {
+//                        Label("Sign Out", systemImage: "arrow.right.square")
+//                    }
+//                }
+//            }
         }
         .id(user.id)
+        .sheet(isPresented: $showProfile) {
+            ProfileView(user: user)
+        }
+
     }
     
     @ViewBuilder
@@ -308,10 +324,6 @@ struct LearnerDashboardView: View {
                             Image(systemName: "person.circle")
                                 .font(.system(size: 24))
                                 .foregroundColor(AppTheme.primaryBlue)
-                        }
-                        
-                        Button(role: .destructive, action: handleLogout) {
-                            Label("Sign Out", systemImage: "arrow.right.square")
                         }
                     }
                 }

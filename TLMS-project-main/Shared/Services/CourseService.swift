@@ -231,7 +231,7 @@ class CourseService: ObservableObject {
             let enrollments: [Enrollment] = try await supabase
                 .from("enrollments")
                 .select()
-                .eq("user_id", value: userID.uuidString)
+                .eq("user_id", value: userID)
                 .execute()
                 .value
             
@@ -245,7 +245,7 @@ class CourseService: ObservableObject {
             var courses: [Course] = try await supabase
                 .from("courses")
                 .select()
-                .in("id", values: courseIDs.map { $0.uuidString })
+                .in("id", values: courseIDs)
                 .execute()
                 .value
             
