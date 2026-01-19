@@ -20,6 +20,8 @@ struct LessonContentEditorView: View {
     @State private var selectedFileURL: URL?
     @State private var selectedFileName: String?
     @State private var showSuccessAlert = false
+    @StateObject private var uploadService = ContentUploadService()
+    @State private var isUploading = false
     
     // Derived binding to get the lesson
     private var lesson: Lesson? {
@@ -101,20 +103,39 @@ struct LessonContentEditorView: View {
                         // Save Button
                         Button(action: saveContent) {
                             HStack {
-                                Image(systemName: "checkmark.circle.fill")
-                                Text("Save Content")
-                                    .font(.headline)
+                                if isUploading {
+                                    ProgressView()
+                                        .tint(.white)
+                                    Text("Uploading...")
+                                        .font(.headline)
+                                } else {
+                                    Image(systemName: "checkmark.circle.fill")
+                                    Text("Save Content")
+                                        .font(.headline)
+                                }
                             }
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
-                            .background(canSave ? AppTheme.primaryBlue : Color.gray.opacity(0.3))
+                            .background((canSave && !isUploading) ? AppTheme.primaryBlue : Color.gray.opacity(0.3))
                             .foregroundColor(.white)
                             .cornerRadius(AppTheme.cornerRadius)
-                            .shadow(color: canSave ? AppTheme.primaryBlue.opacity(0.3) : .clear, radius: 8, y: 4)
+                            .shadow(color: (canSave && !isUploading) ? AppTheme.primaryBlue.opacity(0.3) : .clear, radius: 8, y: 4)
                         }
-                        .disabled(!canSave)
+                        .disabled(!canSave || isUploading)
                         .padding(.horizontal)
                         .padding(.bottom, 40)
+                        
+                        // Upload Progress
+                        if isUploading && uploadService.uploadProgress > 0 {
+                            VStack(spacing: 8) {
+                                ProgressView(value: uploadService.uploadProgress)
+                                    .tint(AppTheme.primaryBlue)
+                                Text("\(Int(uploadService.uploadProgress * 100))% uploaded")
+                                    .font(.caption)
+                                    .foregroundColor(AppTheme.secondaryText)
+                            }
+                            .padding(.horizontal)
+                        }
                     }
                 }
                 .onAppear {
@@ -126,6 +147,15 @@ struct LessonContentEditorView: View {
                     }
                 } message: {
                     Text("Your lesson content has been saved successfully.")
+                }
+                .alert("Upload Error", isPresented: .constant(uploadService.errorMessage != nil)) {
+                    Button("OK") {
+                        uploadService.errorMessage = nil
+                    }
+                } message: {
+                    if let error = uploadService.errorMessage {
+                        Text(error)
+                    }
                 }
             } else {
                 Text("Lesson not found")
@@ -166,26 +196,54 @@ struct LessonContentEditorView: View {
         
         var updatedLesson = viewModel.newCourse.modules[moduleIndex].lessons[lessonIndex]
         
-        switch updatedLesson.type {
-        case .text:
-            updatedLesson.textContent = textContent
+        Task {
+            isUploading = true
             
-        case .video, .pdf, .presentation:
-            updatedLesson.contentDescription = contentDescription
-            updatedLesson.fileName = selectedFileName
-            
-            // In a real app, you would upload the file here and get a URL
-            // For now, we'll store the local URL as a string
-            if let url = selectedFileURL {
-                updatedLesson.fileURL = url.path
+            switch updatedLesson.type {
+            case .text:
+                updatedLesson.textContent = textContent
+                viewModel.updateLesson(moduleID: moduleID, lesson: updatedLesson)
+                showSuccessAlert = true
+                
+            case .video, .pdf, .presentation:
+                updatedLesson.contentDescription = contentDescription
+                updatedLesson.fileName = selectedFileName
+                
+                // Upload the file to Supabase Storage
+                if let fileURL = selectedFileURL {
+                    // Read file data
+                    guard let data = try? Data(contentsOf: fileURL) else {
+                        uploadService.errorMessage = "Failed to read file data"
+                        isUploading = false
+                        return
+                    }
+                    
+                    // Upload and get public URL
+                    if let publicURL = await uploadService.uploadFile(
+                        data: data,
+                        fileName: selectedFileName ?? "file",
+                        contentType: updatedLesson.type,
+                        courseId: viewModel.newCourse.id,
+                        lessonId: updatedLesson.id
+                    ) {
+                        updatedLesson.fileURL = publicURL
+                        viewModel.updateLesson(moduleID: moduleID, lesson: updatedLesson)
+                        isUploading = false
+                        showSuccessAlert = true
+                    } else {
+                        isUploading = false
+                        // Show error from uploadService
+                    }
+                } else {
+                    isUploading = false
+                }
+                
+            case .quiz:
+                break
             }
             
-        case .quiz:
-            break
+            isUploading = false
         }
-        
-        viewModel.updateLesson(moduleID: moduleID, lesson: updatedLesson)
-        showSuccessAlert = true
     }
     
     private var canSave: Bool {
