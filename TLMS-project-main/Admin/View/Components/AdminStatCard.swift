@@ -24,6 +24,8 @@ struct AdminStatCard: View {
                 Text(value)
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
                 
                 Text(title)
                     .font(.subheadline)

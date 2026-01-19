@@ -11,8 +11,10 @@ struct AdminCourseDetailView: View {
     let course: Course
     @Environment(\.dismiss) var dismiss
     @StateObject private var courseService = CourseService()
+    @StateObject private var authService = AuthService()
     @State private var isProcessing = false
     @State private var expandedModules: Set<UUID> = []
+    @State private var educatorName: String = "Loading..."
     
     var onStatusChange: (() -> Void)?
     
@@ -26,8 +28,7 @@ struct AdminCourseDetailView: View {
                             Text("Submitted by Educator")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            // Ideally fetch educator name here or pass it in
-                            Text("Educator ID: \(course.educatorID)")
+                            Text(educatorName)
                                 .font(.system(size: 16, weight: .medium))
                         }
                         Spacer()
@@ -183,6 +184,19 @@ struct AdminCourseDetailView: View {
         .background(AppTheme.groupedBackground)
         .navigationTitle("Review Course")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            await fetchEducatorName()
+        }
+    }
+    
+    // MARK: - Data Loading
+    
+    private func fetchEducatorName() async {
+        if let educator = await authService.fetchUserById(course.educatorID) {
+            educatorName = educator.fullName
+        } else {
+            educatorName = "Unknown Educator"
+        }
     }
     
     // MARK: - Actions

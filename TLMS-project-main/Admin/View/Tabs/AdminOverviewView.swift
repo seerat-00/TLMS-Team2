@@ -80,7 +80,7 @@ struct AdminOverviewView: View {
                                 value: isRevenueEnabled ? filteredRevenue.formatted(.currency(code: "INR")) : "--",
                                 color: AppTheme.successGreen
                             )
-                            .frame(width: 170, height: 140)
+                            .frame(width: 190, height: 140)
                             
 
                             
@@ -90,7 +90,7 @@ struct AdminOverviewView: View {
                                 value: "\(filteredEnrollments.count)",
                                 color: .purple
                             )
-                            .frame(width: 170, height: 140)
+                            .frame(width: 190, height: 140)
                             
                             AdminStatCard(
                                 icon: "chart.bar.fill",
@@ -98,7 +98,7 @@ struct AdminOverviewView: View {
                                 value: isRevenueEnabled ? avgEnrollmentValue.formatted(.currency(code: "INR")) : "--",
                                 color: .indigo
                             )
-                            .frame(width: 170, height: 140)
+                            .frame(width: 190, height: 140)
                             
                             AdminStatCard(
                                 icon: "book.fill",
@@ -106,7 +106,7 @@ struct AdminOverviewView: View {
                                 value: "\(filteredCoursesCount)",
                                 color: .orange
                             )
-                            .frame(width: 170, height: 140)
+                            .frame(width: 190, height: 140)
                         }
                         .padding(.horizontal)
                         .padding(.top, 20)

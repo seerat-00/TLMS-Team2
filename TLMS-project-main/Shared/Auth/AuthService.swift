@@ -419,6 +419,25 @@ class AuthService: ObservableObject {
         }
     }
     
+    // MARK: - Fetch User By ID
+    
+    func fetchUserById(_ userId: UUID) async -> User? {
+        do {
+            let response: User = try await supabase
+                .from("user_profiles")
+                .select()
+                .eq("id", value: userId.uuidString)
+                .single()
+                .execute()
+                .value
+            
+            return response
+        } catch {
+            print("Failed to fetch user: \(error.localizedDescription)")
+            return nil
+        }
+    }
+    
     // MARK: - Password Management
     
     func updatePassword(newPassword: String) async -> Bool {
