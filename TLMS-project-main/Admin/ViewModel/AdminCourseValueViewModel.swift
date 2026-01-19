@@ -31,54 +31,88 @@ class AdminCourseValueViewModel: ObservableObject {
     @Published var errorMessage: String?
     
     private let courseService = CourseService()
+    private var loadTask: Task<Void, Never>?
     
     func loadCourses() async {
-        isLoading = true
-        errorMessage = nil
+        // Cancel any existing load task
+        loadTask?.cancel()
         
-        // Fetch real published courses from Supabase
-        let fetchedCourses = await courseService.fetchPublishedCourses()
+        // Prevent multiple simultaneous loads
+        guard !isLoading else { return }
         
-        // MOCK DATA AUGMENTATION
-        // Since backend doesn't have rating/price/enrolledCount yet, we mock them for the demo.
-        // In a real app, these would come from the DB.
-        
-        var augmentedCourses: [Course] = []
-        
-        for var course in fetchedCourses {
-            // Only add mock data if missing
-            if course.rating == nil {
-                // Random rating between 1.0 and 5.0, weighted towards higher ratings
-                let randomRating = Double.random(in: 2.5...5.0)
-                course.rating = (randomRating * 10).rounded() / 10 // Round to 1 decimal
+        // Create new task
+        loadTask = Task {
+            isLoading = true
+            errorMessage = nil
+            
+            // Fetch real published courses from Supabase
+            let fetchedCourses = await courseService.fetchPublishedCourses()
+            
+            // Check if task was cancelled
+            guard !Task.isCancelled else {
+                isLoading = false
+                return
             }
             
-            if course.price == nil {
-                // Random price between 0 (free) and 199.99
-                let isFree = Bool.random() && Bool.random() // 25% chance of free
-                if isFree {
-                    course.price = 0
-                } else {
-                    let randomPrice = Double.random(in: 9.99...199.99)
-                    // Round to nice price
-                    course.price = (randomPrice * 100).rounded() / 100
+            // MOCK DATA AUGMENTATION
+            // Since backend doesn't have rating/price/enrolledCount yet, we mock them for the demo.
+            // In a real app, these would come from the DB.
+            
+            var augmentedCourses: [Course] = []
+            
+            for var course in fetchedCourses {
+                // Check if task was cancelled
+                guard !Task.isCancelled else {
+                    isLoading = false
+                    return
                 }
+                
+                // Only add mock data if missing
+                if course.rating == nil {
+                    // Random rating between 1.0 and 5.0, weighted towards higher ratings
+                    let randomRating = Double.random(in: 2.5...5.0)
+                    course.rating = (randomRating * 10).rounded() / 10 // Round to 1 decimal
+                }
+                
+                if course.price == nil {
+                    // Random price between 0 (free) and 9999 INR
+                    let isFree = Bool.random() && Bool.random() // 25% chance of free
+                    if isFree {
+                        course.price = 0
+                    } else {
+                        // Generate prices in INR range: 499 to 9999
+                        let randomPrice = Double.random(in: 499...9999)
+                        // Round to nearest 99 or whole hundred for realistic pricing
+                        course.price = (randomPrice / 100).rounded() * 100 - 1
+                    }
+                }
+                
+                if course.enrolledCount == nil {
+                    // Random count
+                    course.enrolledCount = Int.random(in: 0...5000)
+                }
+                
+                augmentedCourses.append(course)
             }
             
-            if course.enrolledCount == nil {
-                // Random count
-                course.enrolledCount = Int.random(in: 0...5000)
+            // Final check before updating UI
+            guard !Task.isCancelled else {
+                isLoading = false
+                return
             }
             
-            augmentedCourses.append(course)
+            self.courses = augmentedCourses
+            sortCourses()
+            isLoading = false
         }
         
-        self.courses = augmentedCourses
-        sortCourses()
-        isLoading = false
+        await loadTask?.value
     }
     
     private func sortCourses() {
+        // Don't sort if there are no courses
+        guard !courses.isEmpty else { return }
+        
         switch sortOption {
         case .defaultSort:
             // Sort by title

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AdminCourseValueView: View {
-    @StateObject private var viewModel = AdminCourseValueViewModel()
+    @ObservedObject var viewModel: AdminCourseValueViewModel
     @Environment(\.colorScheme) var colorScheme
     @State private var showDeleteAlert = false
     @State private var courseToRemove: Course?
@@ -96,6 +96,15 @@ struct AdminCourseValueView: View {
                             .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                             .listRowSeparator(.hidden)
                             .listRowBackground(Color.clear)
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    courseToRemove = course
+                                    removalReason = ""
+                                    showDeleteAlert = true
+                                } label: {
+                                    Label("Remove Course", systemImage: "trash")
+                                }
+                            }
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
                                     courseToRemove = course
@@ -137,9 +146,6 @@ struct AdminCourseValueView: View {
             }
         }
         .background(AppTheme.groupedBackground)
-        .task {
-            await viewModel.loadCourses()
-        }
     }
 }
 
@@ -202,7 +208,7 @@ struct CourseValueRow: View {
                     
                     // Price
                     HStack(spacing: 2) {
-                        Text(course.price == 0 ? "Free" : "$\(String(format: "%.2f", course.price ?? 0.0))")
+                        Text(course.price == 0 ? "Free" : (course.price ?? 0.0).formatted(.currency(code: "INR")))
                             .font(.caption.weight(.semibold))
                             .foregroundColor(AppTheme.successGreen)
                             .padding(.horizontal, 6)
@@ -223,5 +229,5 @@ struct CourseValueRow: View {
 }
 
 #Preview {
-    AdminCourseValueView()
+    AdminCourseValueView(viewModel: AdminCourseValueViewModel())
 }
