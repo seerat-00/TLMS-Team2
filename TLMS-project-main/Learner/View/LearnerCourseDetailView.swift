@@ -12,26 +12,29 @@ struct LearnerCourseDetailView: View {
     let isEnrolled: Bool
     let userId: UUID
     var onEnroll: () async -> Void
-    
+
     @State private var expandedModules: Set<UUID> = []
+    @State private var selectedLesson: Lesson?
+    @State private var showLesson = false
+
     @State private var isEnrolling = false
     @State private var showPaymentSheet = false
     @State private var paymentURL: URL?
     @State private var currentOrderId: String?
     @State private var showError = false
     @State private var errorMessage = ""
-    
+
     @StateObject private var paymentService = PaymentService()
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var authService: AuthService
-    
+
     var isPaidCourse: Bool {
         if let price = course.price, price > 0 {
             return true
         }
         return false
     }
-    
+
     var body: some View {
         Group {
             if course.status != .published {
@@ -39,7 +42,8 @@ struct LearnerCourseDetailView: View {
             } else {
                 ScrollView {
                     VStack(spacing: 24) {
-                        // Header
+
+                        // MARK: - Header
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -51,9 +55,9 @@ struct LearnerCourseDetailView: View {
                                         .foregroundColor(AppTheme.primaryBlue)
                                         .lineLimit(1)
                                 }
-                                
+
                                 Spacer()
-                                
+
                                 if isEnrolled {
                                     Label("Enrolled", systemImage: "checkmark.circle.fill")
                                         .font(.caption.bold())
@@ -63,7 +67,6 @@ struct LearnerCourseDetailView: View {
                                         .foregroundColor(AppTheme.successGreen)
                                         .cornerRadius(8)
                                 } else if isPaidCourse {
-                                    // Show price badge
                                     if let price = course.price {
                                         Text(price.formatted(.currency(code: "INR")))
                                             .font(.title3.bold())
@@ -75,25 +78,24 @@ struct LearnerCourseDetailView: View {
                                     }
                                 }
                             }
-                            
+
                             Divider()
-                            
+
                             Text(course.title)
                                 .font(.title2.bold())
                                 .foregroundColor(AppTheme.primaryText)
-                            
+
                             Text(course.description)
                                 .font(.body)
                                 .foregroundColor(AppTheme.secondaryText)
-                            
-                            // Metadata
+
                             HStack(spacing: 16) {
                                 Label("\(course.modules.count) Modules", systemImage: "book.fill")
-                                
+
                                 if let enrolledCount = course.enrolledCount {
                                     Label("\(enrolledCount) Students", systemImage: "person.2.fill")
                                 }
-                                
+
                                 if let rating = course.rating {
                                     HStack(spacing: 2) {
                                         Image(systemName: "star.fill")
@@ -110,14 +112,14 @@ struct LearnerCourseDetailView: View {
                         .cornerRadius(16)
                         .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
                         .padding(.horizontal)
-                        
-                        // Content Preview
+
+                        // MARK: - Course Content
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Course Content")
                                 .font(.title3.bold())
                                 .foregroundColor(AppTheme.primaryText)
                                 .padding(.horizontal)
-                            
+
                             if course.modules.isEmpty {
                                 Text("No content available yet.")
                                     .font(.subheadline)
@@ -137,13 +139,17 @@ struct LearnerCourseDetailView: View {
                                                     expandedModules.insert(module.id)
                                                 }
                                             }
+                                        },
+                                        onLessonTap: { lesson in
+                                            selectedLesson = lesson
+                                            showLesson = true
                                         }
                                     )
                                 }
                             }
                         }
-                        
-                        Spacer(minLength: 80) // Space for bottom bar
+
+                        Spacer(minLength: 80)
                     }
                     .padding(.top)
                 }
@@ -152,6 +158,19 @@ struct LearnerCourseDetailView: View {
         .background(AppTheme.groupedBackground)
         .navigationTitle("Course Details")
         .navigationBarTitleDisplayMode(.inline)
+
+        // MARK: - Lesson Navigation (ONE place)
+        .navigationDestination(isPresented: $showLesson) {
+            if let lesson = selectedLesson {
+                if lesson.type == .quiz {
+                    LearnerQuizView(lesson: lesson)
+                } else {
+                    LearnerLessonPlaceholderView(lesson: lesson)
+                }
+            }
+        }
+
+        // MARK: - Enrollment UI
         .safeAreaInset(edge: .bottom) {
             if !isEnrolled {
                 enrollmentBottomBar
@@ -179,9 +198,9 @@ struct LearnerCourseDetailView: View {
             Text(errorMessage)
         }
     }
-    
+
     // MARK: - Enrollment Bottom Bar
-    
+
     private var enrollmentBottomBar: some View {
         VStack {
             Divider()
@@ -219,17 +238,13 @@ struct LearnerCourseDetailView: View {
             .background(AppTheme.secondaryGroupedBackground)
         }
     }
-    
-    // MARK: - Actions
-    
+
+    // MARK: - Actions (UNCHANGED)
+
     private func handleEnrollmentAction() {
         if isPaidCourse {
-            // Initiate payment
-            Task {
-                await initiatePayment()
-            }
+            Task { await initiatePayment() }
         } else {
-            // Free enrollment
             Task {
                 isEnrolling = true
                 await onEnroll()
@@ -238,21 +253,18 @@ struct LearnerCourseDetailView: View {
             }
         }
     }
-    
+
     private func initiatePayment() async {
         guard let price = course.price else { return }
         guard let user = authService.currentUser else { return }
-        
-        // Create payment order
+
         if let order = await paymentService.createPaymentOrder(
             courseId: course.id,
             userId: userId,
             amount: price
         ) {
-            // Save the order ID for verification
-            self.currentOrderId = order.orderId
-            
-            // Generate payment URL
+            currentOrderId = order.orderId
+
             if let url = paymentService.getPaymentURL(
                 order: order,
                 userEmail: user.email,
@@ -269,24 +281,22 @@ struct LearnerCourseDetailView: View {
             showError = true
         }
     }
-    
+
     private func handlePaymentSuccess(paymentId: String) async {
-        // Verify payment and enroll
         guard let orderId = currentOrderId else {
             errorMessage = "Order ID validation failed"
             showError = true
             return
         }
-        
+
         let success = await paymentService.verifyPayment(
             orderId: orderId,
             paymentId: paymentId,
             courseId: course.id,
             userId: userId
         )
-        
+
         if success {
-            // User is already enrolled by verifyPayment, just dismiss
             dismiss()
         } else {
             errorMessage = paymentService.errorMessage ?? "Payment verification failed"
@@ -294,4 +304,3 @@ struct LearnerCourseDetailView: View {
         }
     }
 }
-

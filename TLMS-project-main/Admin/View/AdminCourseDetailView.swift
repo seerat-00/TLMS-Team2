@@ -134,7 +134,8 @@ struct AdminCourseDetailView: View {
                                 } else {
                                     expandedModules.insert(module.id)
                                 }
-                            }
+                            },
+                            onLessonTap: { _ in }
                         )
                     }
                 }
