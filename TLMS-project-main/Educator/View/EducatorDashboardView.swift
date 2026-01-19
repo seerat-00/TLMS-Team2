@@ -270,7 +270,7 @@ struct EducatorDashboardView: View {
             Button(viewModel.courseToDelete?.status == .pendingReview ? "Retract" : "Delete", role: .destructive) {
                 if let course = viewModel.courseToDelete {
                     Task {
-                        await viewModel.deleteCourse(course)
+                        _ = await viewModel.deleteCourse(course)
                         viewModel.courseToDelete = nil
                     }
                 }
@@ -291,7 +291,7 @@ struct EducatorDashboardView: View {
             Button("Unpublish", role: .destructive) {
                 if let course = viewModel.courseToUnpublish {
                     Task {
-                        await viewModel.unpublishCourse(course)
+                        _ = await viewModel.unpublishCourse(course)
                         viewModel.courseToUnpublish = nil
                     }
                 }

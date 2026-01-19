@@ -16,6 +16,7 @@ struct LearnerCourseDetailView: View {
     @State private var expandedModules: Set<UUID> = []
     @State private var selectedLesson: Lesson?
     @State private var showLesson = false
+    @State private var showEnrollmentAlert = false
 
     @State private var isEnrolling = false
     @State private var showPaymentSheet = false
@@ -131,6 +132,7 @@ struct LearnerCourseDetailView: View {
                                         module: module,
                                         moduleNumber: index + 1,
                                         isExpanded: expandedModules.contains(module.id),
+                                        isEnrolled: isEnrolled,
                                         onToggle: {
                                             withAnimation {
                                                 if expandedModules.contains(module.id) {
@@ -141,8 +143,12 @@ struct LearnerCourseDetailView: View {
                                             }
                                         },
                                         onLessonTap: { lesson in
-                                            selectedLesson = lesson
-                                            showLesson = true
+                                            if isEnrolled {
+                                                selectedLesson = lesson
+                                                showLesson = true
+                                            } else {
+                                                showEnrollmentAlert = true
+                                            }
                                         }
                                     )
                                 }
@@ -162,10 +168,15 @@ struct LearnerCourseDetailView: View {
         // MARK: - Lesson Navigation (ONE place)
         .navigationDestination(isPresented: $showLesson) {
             if let lesson = selectedLesson {
+                // Only enrolled users can reach this point due to onLessonTap check
                 if lesson.type == .quiz {
                     LearnerQuizView(lesson: lesson)
                 } else {
-                    LearnerLessonPlaceholderView(lesson: lesson)
+                    LessonContentView(
+                        lesson: lesson,
+                        courseId: course.id,
+                        userId: userId
+                    )
                 }
             }
         }
@@ -196,6 +207,14 @@ struct LearnerCourseDetailView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage)
+        }
+        .alert("Enrollment Required", isPresented: $showEnrollmentAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Enroll Now") {
+                // Scroll to bottom where enrollment button is
+            }
+        } message: {
+            Text("Please enroll in this course to access the lesson content.")
         }
     }
 

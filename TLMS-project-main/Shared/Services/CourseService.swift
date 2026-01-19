@@ -314,6 +314,110 @@ class CourseService: ObservableObject {
             return []
         }
     }
+    
+    // MARK: - Progress Tracking
+    
+    /// Mark a lesson as complete for a user
+    func markLessonComplete(userId: UUID, courseId: UUID, lessonId: UUID) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            struct LessonCompletion: Codable {
+                let id: UUID?
+                let userId: UUID
+                let courseId: UUID
+                let lessonId: UUID
+                let completedAt: Date
+                
+                enum CodingKeys: String, CodingKey {
+                    case id
+                    case userId = "user_id"
+                    case courseId = "course_id"
+                    case lessonId = "lesson_id"
+                    case completedAt = "completed_at"
+                }
+            }
+            
+            let completion = LessonCompletion(
+                id: nil,
+                userId: userId,
+                courseId: courseId,
+                lessonId: lessonId,
+                completedAt: Date()
+            )
+            
+            // Insert or update lesson completion
+            try await supabase
+                .from("lesson_completions")
+                .upsert(completion)
+                .execute()
+            
+            return true
+        } catch {
+            print("❌ Error marking lesson complete: \\(error)")
+            errorMessage = "Failed to mark lesson as complete: \\(error.localizedDescription)"
+            return false
+        }
+    }
+    
+    /// Update course progress based on completed lessons
+    func updateCourseProgress(userId: UUID, courseId: UUID) async {
+        do {
+            // Fetch the course to get total lesson count
+            guard let course = await fetchCourse(by: courseId) else {
+                print("❌ Could not fetch course for progress update")
+                return
+            }
+            
+            // Calculate total lessons
+            let totalLessons = course.modules.reduce(0) { $0 + $1.lessons.count }
+            guard totalLessons > 0 else {
+                print("⚠️ Course has no lessons")
+                return
+            }
+            
+            // Fetch completed lessons for this user and course
+            struct LessonCompletionQuery: Codable {
+                let lessonId: UUID
+                
+                enum CodingKeys: String, CodingKey {
+                    case lessonId = "lesson_id"
+                }
+            }
+            
+            let completions: [LessonCompletionQuery] = try await supabase
+                .from("lesson_completions")
+                .select("lesson_id")
+                .eq("user_id", value: userId.uuidString)
+                .eq("course_id", value: courseId.uuidString)
+                .execute()
+                .value
+            
+            let completedCount = completions.count
+            let progress = Double(completedCount) / Double(totalLessons)
+            
+            print("📊 Progress: \\(completedCount)/\\(totalLessons) = \\(progress)")
+            
+            // Update enrollment progress
+            struct ProgressUpdate: Encodable {
+                let progress: Double
+            }
+            
+            try await supabase
+                .from("enrollments")
+                .update(ProgressUpdate(progress: progress))
+                .eq("user_id", value: userId.uuidString)
+                .eq("course_id", value: courseId.uuidString)
+                .execute()
+            
+            print("✅ Progress updated successfully")
+        } catch {
+            print("❌ Error updating course progress: \\(error)")
+            errorMessage = "Failed to update progress: \\(error.localizedDescription)"
+        }
+    }
 }
 
 // Helper model for enrollment

@@ -116,10 +116,8 @@ class ProfileViewModel: ObservableObject {
                 .execute()
             
             // Update local user object
-            if var currentUser = user {
-                await fetchLatestUser()
-                saveMessage = "Profile updated successfully"
-            }
+            await fetchLatestUser()
+            saveMessage = "Profile updated successfully"
         } catch {
             errorMessage = "Failed to update profile: \(error.localizedDescription)"
         }

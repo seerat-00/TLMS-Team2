@@ -129,6 +129,7 @@ struct AdminCourseDetailView: View {
                             module: module,
                             moduleNumber: index + 1,
                             isExpanded: expandedModules.contains(module.id),
+                            isEnrolled: true,
                             onToggle: {
                                 if expandedModules.contains(module.id) {
                                     expandedModules.remove(module.id)

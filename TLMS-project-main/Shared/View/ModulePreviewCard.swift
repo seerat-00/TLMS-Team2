@@ -4,6 +4,7 @@ struct ModulePreviewCard: View {
     let module: Module
     let moduleNumber: Int
     let isExpanded: Bool
+    let isEnrolled: Bool  // NEW: enrollment status
     let onToggle: () -> Void
     let onLessonTap: (Lesson) -> Void   // 👈 NEW (navigation delegated to parent)
 
@@ -68,6 +69,13 @@ struct ModulePreviewCard: View {
                             }
 
                             Spacer()
+                            
+                            // Show lock icon if not enrolled
+                            if !isEnrolled {
+                                Image(systemName: "lock.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(AppTheme.secondaryText.opacity(0.6))
+                            }
                         }
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
@@ -76,6 +84,7 @@ struct ModulePreviewCard: View {
                         .onTapGesture {
                             onLessonTap(lesson)                // 👈 delegate navigation
                         }
+                        .opacity(isEnrolled ? 1.0 : 0.6)  // Dim unenrolled lessons
 
                         if index < module.lessons.count - 1 {
                             Divider()
