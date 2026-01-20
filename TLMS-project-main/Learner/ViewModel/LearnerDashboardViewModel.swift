@@ -24,6 +24,8 @@ final class LearnerDashboardViewModel: ObservableObject {
     @Published var searchText: String = ""
     @Published var selectedCategory: String? = nil
     @Published var selectedSortOption: CourseSortOption = .relevance
+   
+
     
     private let courseService = CourseService()
     
@@ -66,7 +68,25 @@ final class LearnerDashboardViewModel: ObservableObject {
         self.publishedCourses = pub
         self.enrolledCourses = enr
         self.isLoading = false
+        await checkForInactivityNudge(userId: userId)
+        
     }
+    private func checkForInactivityNudge(userId: UUID) async {
+        let activityService = ActivityService()
+        guard let lastActive = await activityService.fetchLastActive(userId: userId) else { return }
+
+        let hoursInactive = Date().timeIntervalSince(lastActive) / 3600
+
+        if hoursInactive >= 24 {
+            NotificationManager.shared.scheduleNotification(
+                id: "nudge_\(userId.uuidString)",
+                title: "Keep Learning 🚀",
+                body: "You haven’t studied in a while. Let’s continue your course today!",
+                date: Date().addingTimeInterval(10) // 10 sec test, later schedule immediate
+            )
+        }
+    }
+
     
     // MARK: - Actions
     func enroll(course: Course, userId: UUID) async -> Bool {

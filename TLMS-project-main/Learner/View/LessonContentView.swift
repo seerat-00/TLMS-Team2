@@ -18,6 +18,7 @@ struct LessonContentView: View {
     @State private var isCompleted = false
     @State private var showCompletionAlert = false
     @StateObject private var courseService = CourseService()
+    @State private var isCheckingCompletion = false
     
     var body: some View {
         ScrollView {
@@ -89,6 +90,9 @@ struct LessonContentView: View {
         .background(AppTheme.groupedBackground)
         .navigationTitle("Lesson")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+                   await checkIfAlreadyCompleted()
+               }
         .alert("Lesson Complete!", isPresented: $showCompletionAlert) {
             Button("Continue", role: .cancel) {}
         } message: {
@@ -109,6 +113,19 @@ struct LessonContentView: View {
             )
         }
     }
+    // MARK: - Check if Completed (NEW ✅)
+       private func checkIfAlreadyCompleted() async {
+           isCheckingCompletion = true
+           defer { isCheckingCompletion = false }
+
+           let completed = await courseService.isLessonCompleted(
+               userId: userId,
+               courseId: courseId,
+               lessonId: lesson.id
+           )
+
+           isCompleted = completed
+       }
     
     // MARK: - Content View based on Type
     @ViewBuilder

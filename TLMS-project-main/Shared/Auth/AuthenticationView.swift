@@ -39,6 +39,10 @@ struct AuthenticationView: View {
                 } else {
                     // User is authenticated - route to appropriate dashboard
                     MainAppView(user: user)
+                        .task {
+                            await NotificationManager.shared.requestPermission()
+                        }
+
                 }
             } else {
                 // Not authenticated - show login

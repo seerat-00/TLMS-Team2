@@ -376,52 +376,29 @@ class CourseService: ObservableObject {
         }
     }
     
-    /// Check if a lesson is completed
+    // MARK: - Check completion status
     func isLessonCompleted(userId: UUID, courseId: UUID, lessonId: UUID) async -> Bool {
         do {
-            struct LessonCompletionQuery: Codable {
-                let id: UUID
+            struct CompletionRow: Decodable {
+                let lesson_id: UUID
             }
-            
-            let completions: [LessonCompletionQuery] = try await supabase
+
+            let rows: [CompletionRow] = try await supabase
                 .from("lesson_completions")
-                .select("id")
-                .eq("user_id", value: userId)
-                .eq("course_id", value: courseId)
-                .eq("lesson_id", value: lessonId)
+                .select("lesson_id")
+                .eq("user_id", value: userId.uuidString)
+                .eq("course_id", value: courseId.uuidString)
+                .eq("lesson_id", value: lessonId.uuidString)
                 .execute()
                 .value
-            
-            return !completions.isEmpty
+
+            return !rows.isEmpty
         } catch {
-            print("❌ Error checking lesson completion: \(error.localizedDescription)")
+            print("❌ Failed to check lesson completion: \(error)")
             return false
         }
     }
-    
-    /// Get course progress for a user
-    func getCourseProgress(userId: UUID, courseId: UUID) async -> Double {
-        do {
-            struct EnrollmentProgress: Codable {
-                let progress: Double?
-            }
-            
-            let result: [EnrollmentProgress] = try await supabase
-                .from("enrollments")
-                .select("progress")
-                .eq("user_id", value: userId)
-                .eq("course_id", value: courseId)
-                .execute()
-                .value
-            
-            let progress = result.first?.progress ?? 0.0
-            print("📊 Fetched progress from DB: \(progress * 100)% for course \(courseId)")
-            return progress
-        } catch {
-            print("❌ Error fetching progress: \(error.localizedDescription)")
-            return 0.0
-        }
-    }
+
     
     /// Update course progress based on completed lessons
     func updateCourseProgress(userId: UUID, courseId: UUID) async {
