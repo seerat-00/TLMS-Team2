@@ -384,6 +384,42 @@ class CourseService: ObservableObject {
             return false
         }
     }
+    
+    // MARK: - Deadlines (NEW ✅)
+
+    func fetchDeadlinesForLearner(userId: UUID) async -> [CourseDeadline] {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            // Step 1: learner ke enrollments nikaalo
+            let enrollments: [Enrollment] = try await supabase
+                .from("enrollments")
+                .select()
+                .eq("user_id", value: userId.uuidString)
+                .execute()
+                .value
+            
+            let courseIds = enrollments.map { $0.courseID }
+            if courseIds.isEmpty { return [] }
+            
+            // Step 2: deadlines fetch karo
+            let deadlines: [CourseDeadline] = try await supabase
+                .from("course_deadlines")
+                .select()
+                .in("course_id", values: courseIds.map { $0.uuidString })
+                .order("deadline_at", ascending: true)
+                .execute()
+                .value
+            
+            return deadlines
+        } catch {
+            errorMessage = "Failed to fetch deadlines: \(error.localizedDescription)"
+            return []
+        }
+    }
+
 
     
     /// Update course progress based on completed lessons

@@ -13,6 +13,8 @@ struct ProfileView: View {
     @State private var showingEditSheet = false
     @State private var editedName = ""
     @State private var showSignOutAlert = false
+    @AppStorage("reminders_enabled") private var remindersEnabled = false
+
     
     init(user: User?) {
         _viewModel = StateObject(wrappedValue: ProfileViewModel(user: user))
@@ -48,6 +50,13 @@ struct ProfileView: View {
             .navigationBarTitleDisplayMode(.large)
             .task {
                 await viewModel.loadProfileData()
+                // ✅ If toggle already ON, ensure reminder exists
+                   if remindersEnabled {
+                       let granted = await LocalNotificationManager.shared.requestPermission()
+                       if granted {
+                           await LocalNotificationManager.shared.scheduleDailyReminder(hour: 9, minute: 0)
+                       }
+                   }
             }
             .refreshable {
                 await viewModel.loadProfileData()
@@ -165,9 +174,77 @@ struct ProfileView: View {
             // Assuming no separate model for now, just showing completed courses.
         }
     }
+    // Study Reminder Section ✅ NEW
+    private var studyReminderSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Study Reminder")
+                .font(.title3.bold())
+                .foregroundColor(AppTheme.primaryText)
+            
+            VStack(spacing: 12) {
+                Toggle("Enable daily reminder", isOn: $viewModel.reminderEnabled)
+                    .onChange(of: viewModel.reminderEnabled) { _ in
+                        Task {
+                            await viewModel.updateReminderSettings()
+                        }
+                    }
+                
+                if viewModel.reminderEnabled {
+                    DatePicker(
+                        "Reminder time",
+                        selection: $viewModel.reminderTime,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .datePickerStyle(.compact)
+                    .onChange(of: viewModel.reminderTime) { _ in
+                        Task {
+                            await viewModel.updateReminderSettings()
+                        }
+                    }
+                }
+            }
+            .padding()
+            .background(AppTheme.secondaryGroupedBackground)
+            .cornerRadius(12)
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        }
+    }
+
     
     private var accountActionsSection: some View {
         VStack(spacing: 1) {
+            
+            // ✅ Reminders Toggle
+            HStack {
+                Label("Daily Study Reminder", systemImage: "bell.badge.fill")
+                    .foregroundColor(AppTheme.primaryText)
+
+                Spacer()
+
+                Toggle("", isOn: $remindersEnabled)
+                    .labelsHidden()
+                    .tint(AppTheme.primaryBlue)
+                    .onChange(of: remindersEnabled) { newValue in
+                        Task {
+                            if newValue {
+                                let granted = await LocalNotificationManager.shared.requestPermission()
+                                if granted {
+                                    await LocalNotificationManager.shared.scheduleDailyReminder(hour: 9, minute: 0)
+                                } else {
+                                    // permission denied → toggle OFF
+                                    remindersEnabled = false
+                                }
+                            } else {
+                                await LocalNotificationManager.shared.cancelDailyReminder()
+                            }
+                        }
+                    }
+            }
+            .padding()
+            .background(AppTheme.secondaryGroupedBackground)
+            .cornerRadius(12)
+
+
             // Change Password
             NavigationLink(destination: ChangePasswordView()) {
                 HStack {

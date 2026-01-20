@@ -182,6 +182,45 @@ struct LearnerDashboardView: View {
                             )
                         }
                         .padding(.horizontal)
+                        // ✅ Upcoming Deadlines
+                        if title == "My Courses" {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Text("Upcoming Deadlines")
+                                        .font(.title3.bold())
+                                        .foregroundColor(AppTheme.primaryText)
+
+                                    Spacer()
+
+                                    if viewModel.upcomingDeadlines.isEmpty {
+                                        Text("No deadlines")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .padding(.horizontal)
+
+                                if viewModel.upcomingDeadlines.isEmpty {
+                                    LearnerEmptyState(
+                                        icon: "calendar",
+                                        title: "No upcoming deadlines",
+                                        message: "You're all caught up 🎉"
+                                    )
+                                    .padding(.horizontal)
+                                } else {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 12) {
+                                            ForEach(viewModel.upcomingDeadlines) { deadline in
+                                                DeadlineCard(deadline: deadline)
+                                            }
+                                        }
+                                        .padding(.horizontal)
+                                    }
+                                }
+                            }
+                            .padding(.top, 6)
+                        }
+
                         
                         // Sort Options (scrollable to prevent truncation)
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -558,7 +597,58 @@ struct LearnerDashboardView: View {
             )
         }
     }
-    
+    struct DeadlineCard: View {
+        let deadline: CourseDeadline
+
+        var body: some View {
+            VStack(alignment: .leading, spacing: 10) {
+
+                HStack {
+                    Image(systemName: "calendar.badge.clock")
+                        .foregroundColor(AppTheme.primaryBlue)
+
+                    Spacer()
+
+                    Text(timeRemainingText(from: deadline.deadlineAt))
+                        .font(.caption.bold())
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(AppTheme.primaryBlue.opacity(0.12))
+                        .foregroundColor(AppTheme.primaryBlue)
+                        .cornerRadius(10)
+                }
+
+                Text(deadline.title)
+                    .font(.headline)
+                    .foregroundColor(AppTheme.primaryText)
+                    .lineLimit(2)
+
+                Text(deadline.deadlineAt.formatted(date: .abbreviated, time: .shortened))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .padding(14)
+            .frame(width: 240)
+            .background(AppTheme.secondaryGroupedBackground)
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        }
+
+        private func timeRemainingText(from date: Date) -> String {
+            let interval = date.timeIntervalSinceNow
+            if interval <= 0 { return "Due" }
+
+            let hours = Int(interval / 3600)
+            let days = hours / 24
+
+            if days >= 1 { return "\(days)d left" }
+            if hours >= 1 { return "\(hours)h left" }
+
+            let mins = Int(interval / 60)
+            return "\(max(mins, 1))m left"
+        }
+    }
+
 
 // MARK: - Components
 // Components are defined in separate files (LearnerDashboardComponents.swift, etc.)
