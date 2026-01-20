@@ -19,6 +19,8 @@ final class LearnerDashboardViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var showingError: Bool = false
     @Published var errorMessage: String? = nil
+    @Published var upcomingDeadlines: [CourseDeadline] = []
+
     
     // Filter State
     @Published var searchText: String = ""
@@ -69,8 +71,22 @@ final class LearnerDashboardViewModel: ObservableObject {
         self.enrolledCourses = enr
         self.isLoading = false
         await checkForInactivityNudge(userId: userId)
+        // ✅ after courses load
+        await scheduleDeadlineNotifications(userId: userId)
+        await loadDeadlines(userId: userId)
+
         
     }
+    func loadDeadlines(userId: UUID) async {
+        let deadlines = await courseService.fetchDeadlinesForLearner(userId: userId)
+
+        // only future deadlines
+        let future = deadlines.filter { $0.deadlineAt > Date() }
+
+        // show only next 5 deadlines
+        self.upcomingDeadlines = Array(future.prefix(5))
+    }
+
     private func checkForInactivityNudge(userId: UUID) async {
         let activityService = ActivityService()
         guard let lastActive = await activityService.fetchLastActive(userId: userId) else { return }
@@ -104,6 +120,32 @@ final class LearnerDashboardViewModel: ObservableObject {
             return false
         }
     }
+    // MARK: - Deadline Reminders (NEW ✅)
+    func scheduleDeadlineNotifications(userId: UUID) async {
+
+        // 1) permission
+        let granted = await LocalNotificationManager.shared.requestPermission()
+        if !granted { return }
+
+        // 2) fetch deadlines
+        let deadlines = await courseService.fetchDeadlinesForLearner(userId: userId)
+
+        // 3) schedule each deadline (1 hour before)
+        for deadline in deadlines {
+
+            let reminderTime = deadline.deadlineAt.addingTimeInterval(-3600) // 1 hour before
+
+            // ignore if reminder time already passed
+            if reminderTime <= Date() { continue }
+
+            await LocalNotificationManager.shared.scheduleDeadlineReminder(
+                deadlineId: deadline.id,
+                title: deadline.title,
+                deadlineAt: reminderTime
+            )
+        }
+    }
+
     
     func isEnrolled(_ course: Course) -> Bool {
         enrolledCourses.contains(where: { $0.id == course.id })

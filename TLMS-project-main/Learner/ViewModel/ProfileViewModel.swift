@@ -17,11 +17,15 @@ class ProfileViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var isSaving = false
     @Published var saveMessage: String?
+    @Published var reminderEnabled: Bool = false
+    @Published var reminderTime: Date = Date()
+
     
     // Auth actions state
     @Published var showChangePassword = false
     @Published var resetEmailSent = false
     
+    private let reminderService = ReminderSettingsService()
     private let supabase = SupabaseManager.shared.client
     
     // MARK: - Initialization
@@ -38,6 +42,7 @@ class ProfileViewModel: ObservableObject {
         
         await fetchLatestUser()
         await fetchCompletedCourses()
+        await fetchReminderSettings()
     }
     
     func fetchLatestUser() async {
@@ -122,6 +127,78 @@ class ProfileViewModel: ObservableObject {
             errorMessage = "Failed to update profile: \(error.localizedDescription)"
         }
     }
+    
+    
+    func fetchReminderSettings() async {
+        guard let userId = user?.id else { return }
+        
+        if let settings = await reminderService.fetchSettings(userId: userId) {
+            reminderEnabled = settings.enabled
+            
+            // convert "HH:mm:ss" -> Date
+            reminderTime = timeStringToDate(settings.reminderTime) ?? Date()
+            
+            // if enabled, schedule notification
+            if reminderEnabled {
+                await scheduleReminder()
+            }
+        }
+    }
+
+    func updateReminderSettings() async {
+        guard let userId = user?.id else { return }
+        
+        // convert Date -> "HH:mm:ss"
+        let timeString = dateToTimeString(reminderTime)
+        
+        let saved = await reminderService.saveSettings(
+            userId: userId,
+            enabled: reminderEnabled,
+            reminderTime: timeString
+        )
+        
+        if saved {
+            if reminderEnabled {
+                await scheduleReminder()
+                saveMessage = "Study reminder enabled ✅"
+            } else {
+                await LocalNotificationManager.shared.cancelDailyReminder()
+                saveMessage = "Study reminder disabled ❌"
+            }
+        } else {
+            errorMessage = "Failed to update reminder settings"
+        }
+    }
+
+    // MARK: - Notification schedule
+    private func scheduleReminder() async {
+        let granted = await LocalNotificationManager.shared.requestPermission()
+        if !granted {
+            errorMessage = "Notification permission not granted"
+            reminderEnabled = false
+            return
+        }
+        
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: reminderTime)
+        let minute = calendar.component(.minute, from: reminderTime)
+        
+        await LocalNotificationManager.shared.scheduleDailyReminder(hour: hour, minute: minute)
+    }
+
+    // MARK: - Helpers
+    private func dateToTimeString(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter.string(from: date)
+    }
+
+    private func timeStringToDate(_ timeString: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter.date(from: timeString)
+    }
+
     
     // MARK: - Auth Actions
     
