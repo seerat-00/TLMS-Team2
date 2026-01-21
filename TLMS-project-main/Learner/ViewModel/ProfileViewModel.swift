@@ -13,6 +13,7 @@ import Combine
 class ProfileViewModel: ObservableObject {
     @Published var user: User?
     @Published var completedCourses: [Course] = []
+    @Published var certificates: [Certificate] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var isSaving = false
@@ -26,6 +27,7 @@ class ProfileViewModel: ObservableObject {
     @Published var resetEmailSent = false
     
     private let reminderService = ReminderSettingsService()
+    private let certificateService = CertificateService()
     private let supabase = SupabaseManager.shared.client
     
     // MARK: - Initialization
@@ -42,7 +44,13 @@ class ProfileViewModel: ObservableObject {
         
         await fetchLatestUser()
         await fetchCompletedCourses()
+        await fetchCertificates()
         await fetchReminderSettings()
+    }
+    
+    func fetchCertificates() async {
+        guard let userId = user?.id else { return }
+        self.certificates = await certificateService.fetchCertificates(userId: userId)
     }
     
     func fetchLatestUser() async {

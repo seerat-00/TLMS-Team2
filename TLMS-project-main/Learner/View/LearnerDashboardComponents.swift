@@ -115,42 +115,76 @@ struct CategoryCoursesView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject private var courseService = CourseService()
     @State private var enrolledCourseIds: Set<UUID> = []
+    @State private var searchText = ""
+
+    var filteredCourses: [Course] {
+        if searchText.isEmpty {
+            return courses
+        }
+        return courses.filter { course in
+            course.title.localizedCaseInsensitiveContains(searchText) ||
+            course.description.localizedCaseInsensitiveContains(searchText)
+        }
+    }
 
     var body: some View {
         ZStack {
             AppTheme.groupedBackground
                 .ignoresSafeArea(edges: .top)
 
-            ScrollView {
-                LazyVStack(spacing: 16) {
-                    if courses.isEmpty {
-                        LearnerEmptyState(
-                            icon: "book.closed.fill",
-                            title: "No Courses Yet",
-                            message: "Check back later for \(category) courses"
-                        )
-                        .padding(.top, 60)
-                    } else {
-                        ForEach(courses) { course in
-                            NavigationLink(
-                                destination:
-                                    LearnerCourseDetailView(
-                                        course: course,
-                                        isEnrolled: enrolledCourseIds.contains(course.id),
-                                        userId: userId,
-                                        onEnroll: {}
-                                    )
-                            ) {
-                                CategoryCourseCard(
-                                    course: course,
-                                    isEnrolled: enrolledCourseIds.contains(course.id)
-                                )
-                            }
-                            .buttonStyle(.plain)
+            VStack(spacing: 0) {
+                // Search Bar
+                HStack(spacing: 12) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(.secondary)
+                    
+                    TextField("Search in \(category)", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .autocapitalization(.none)
+                    
+                    if !searchText.isEmpty {
+                        Button(action: { searchText = "" }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
                         }
                     }
                 }
                 .padding()
+                .background(AppTheme.secondaryGroupedBackground)
+                .cornerRadius(12)
+                .padding()
+
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        if filteredCourses.isEmpty {
+                            LearnerEmptyState(
+                                icon: "book.closed.fill",
+                                title: "No Courses Found",
+                                message: searchText.isEmpty ? "Check back later for \(category) courses" : "No courses match your search"
+                            )
+                            .padding(.top, 60)
+                        } else {
+                            ForEach(filteredCourses) { course in
+                                NavigationLink(
+                                    destination:
+                                        LearnerCourseDetailView(
+                                            course: course,
+                                            isEnrolled: enrolledCourseIds.contains(course.id),
+                                            userId: userId,
+                                            onEnroll: {}
+                                        )
+                                ) {
+                                    CategoryCourseCard(
+                                        course: course,
+                                        isEnrolled: enrolledCourseIds.contains(course.id)
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
             }
         }
         .navigationTitle(category)

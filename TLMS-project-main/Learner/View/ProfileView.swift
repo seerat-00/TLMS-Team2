@@ -31,8 +31,8 @@ struct ProfileView: View {
                         // Header Section
                         profileHeader
                         
-                        // Learning History
-                        learningHistorySection
+                        // Certificates Section (Prominent)
+                        certificatesSection
                         
                         // Account Actions
                         accountActionsSection
@@ -142,18 +142,34 @@ struct ProfileView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
     }
     
-    private var learningHistorySection: some View {
+    private var certificatesSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Learning History")
-                .font(.title3.bold())
-                .foregroundColor(AppTheme.primaryText)
+            HStack {
+                Text("My Certificates")
+                    .font(.title3.bold())
+                    .foregroundColor(AppTheme.primaryText)
+                
+                Spacer()
+                
+                if !viewModel.certificates.isEmpty {
+                    Text("\(viewModel.certificates.count)")
+                        .font(.subheadline.bold())
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(AppTheme.primaryBlue)
+                        .clipShape(Capsule())
+                }
+            }
             
-            if viewModel.completedCourses.isEmpty {
-                HStack {
-                    Image(systemName: "book.closed")
-                        .font(.largeTitle)
-                        .foregroundColor(AppTheme.secondaryText.opacity(0.5))
-                    Text("No completed courses yet.")
+            if viewModel.certificates.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "seal")
+                        .font(.system(size: 40))
+                        .foregroundColor(AppTheme.secondaryText.opacity(0.3))
+                    
+                    Text("No certificates earned yet.")
+                        .font(.subheadline)
                         .foregroundColor(AppTheme.secondaryText)
                 }
                 .frame(maxWidth: .infinity)
@@ -161,17 +177,15 @@ struct ProfileView: View {
                 .background(AppTheme.secondaryGroupedBackground)
                 .cornerRadius(12)
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 16) {
-                        ForEach(viewModel.completedCourses) { course in
-                            CompletedCourseCard(course: course)
+                VStack(spacing: 12) {
+                    ForEach(viewModel.certificates) { certificate in
+                        NavigationLink(destination: CertificateView(certificate: certificate)) {
+                            CertificateCard(certificate: certificate)
                         }
+                        .buttonStyle(.plain)
                     }
                 }
             }
-            
-            // Certificates placeholder (requirements mentioned certifications if available)
-            // Assuming no separate model for now, just showing completed courses.
         }
     }
     // Study Reminder Section ✅ NEW

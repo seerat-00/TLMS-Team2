@@ -12,10 +12,7 @@ struct LearnerDashboardView: View {
     let user: User
     @EnvironmentObject var authService: AuthService
     @StateObject private var viewModel = LearnerDashboardViewModel()
-    @State private var selectedTab = 0 // 0: Browse, 1: My Courses
-    
-    @State private var showProfile = false
-    @State private var showCertificates = false
+    @State private var selectedTab = 0
     @State private var dashboardRefreshTrigger = UUID()
     
     @Environment(\.colorScheme) var colorScheme
@@ -49,6 +46,13 @@ struct LearnerDashboardView: View {
                     Label("Search", systemImage: "magnifyingglass")
                 }
                 .tag(2)
+            
+            // Profile Tab
+            ProfileView(user: user)
+                .tabItem {
+                    Label("Profile", systemImage: "person.fill")
+                }
+                .tag(3)
         }
         .tint(AppTheme.primaryBlue)
         .toolbarBackground(.visible, for: .tabBar)
@@ -105,61 +109,12 @@ struct LearnerDashboardView: View {
                         .padding()
                         .padding(.bottom, 80) // Space for search bar
                     }
-                    
-                    // Bottom Search Bar (Apple TV style)
-                    HStack(spacing: 12) {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                            .font(.system(size: 18))
-                        
-                        TextField("Search courses, topics and more", text: $viewModel.searchText)
-                            .textFieldStyle(.plain)
-                            .autocapitalization(.none)
-                            .font(.system(size: 16))
-                        
-                        if !viewModel.searchText.isEmpty {
-                            Button(action: { viewModel.searchText = "" }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                    .padding()
-                    .background(
-                        AppTheme.secondaryGroupedBackground
-                            .ignoresSafeArea(edges: .bottom)
-                    )
                 }
             }
-            .navigationTitle("Search")
+            .navigationTitle("Course Category")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        Button(action: { showCertificates = true }) {
-                            Image(systemName: "seal.fill")
-                                .font(.system(size: 22))
-                                .foregroundColor(AppTheme.primaryBlue)
-                        }
-                        Button(action: { showProfile = true }) {
-                            Image(systemName: "person.circle")
-                                .font(.system(size: 24))
-                                .foregroundColor(AppTheme.primaryBlue)
-                        }
-                    }
-                }
-            }
         }
         .id(user.id)
-        .sheet(isPresented: $showProfile) {
-            ProfileView(user: user)
-        }
-        .sheet(isPresented: $showCertificates) {
-            NavigationView {
-                CertificatesListView(userId: user.id)
-            }
-        }
-        
     }
     
     @ViewBuilder
@@ -242,42 +197,70 @@ struct LearnerDashboardView: View {
                         }
                         
                         
-                        // Sort Options (scrollable to prevent truncation)
+                        // Sort/Filter Options (scrollable to prevent truncation)
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 12) {
-                                Text("Sort by")
+                                Text(title == "My Courses" ? "Filter by" : "Sort by")
                                     .font(.subheadline.weight(.medium))
                                     .foregroundColor(.secondary)
                                 
-                                ForEach(CourseSortOption.allCases) { option in
-                                    Button(action: {
-                                        withAnimation {
-                                            viewModel.selectedSortOption = option
-                                        }
-                                    }) {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: option.icon)
-                                                .font(.system(size: 12))
-                                            Text(option.displayName)
+                                if title == "My Courses" {
+                                    ForEach(CourseEnrollmentFilter.allCases) { filter in
+                                        Button(action: {
+                                            withAnimation {
+                                                viewModel.selectedEnrollmentFilter = filter
+                                            }
+                                        }) {
+                                            Text(filter.rawValue)
                                                 .font(.system(size: 14, weight: .medium))
+                                                .padding(.horizontal, 14)
+                                                .padding(.vertical, 8)
+                                                .background(
+                                                    viewModel.selectedEnrollmentFilter == filter ?
+                                                    AppTheme.primaryBlue : Color.clear
+                                                )
+                                                .foregroundColor(
+                                                    viewModel.selectedEnrollmentFilter == filter ?
+                                                    .white : AppTheme.primaryBlue
+                                                )
+                                                .cornerRadius(16)
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 16)
+                                                        .stroke(AppTheme.primaryBlue, lineWidth: viewModel.selectedEnrollmentFilter == filter ? 0 : 1.5)
+                                                )
                                         }
-                                        .padding(.horizontal, 14)
-                                        .padding(.vertical, 8)
-                                        .background(
-                                            viewModel.selectedSortOption == option ?
-                                            AppTheme.primaryBlue :
-                                                Color.clear
-                                        )
-                                        .foregroundColor(
-                                            viewModel.selectedSortOption == option ?
-                                                .white :
-                                                AppTheme.primaryBlue
-                                        )
-                                        .cornerRadius(16)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 16)
-                                                .stroke(AppTheme.primaryBlue, lineWidth: viewModel.selectedSortOption == option ? 0 : 1.5)
-                                        )
+                                    }
+                                } else {
+                                    ForEach(CourseSortOption.allCases) { option in
+                                        Button(action: {
+                                            withAnimation {
+                                                viewModel.selectedSortOption = option
+                                            }
+                                        }) {
+                                            HStack(spacing: 4) {
+                                                Image(systemName: option.icon)
+                                                    .font(.system(size: 12))
+                                                Text(option.displayName)
+                                                    .font(.system(size: 14, weight: .medium))
+                                            }
+                                            .padding(.horizontal, 14)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                viewModel.selectedSortOption == option ?
+                                                AppTheme.primaryBlue :
+                                                    Color.clear
+                                            )
+                                            .foregroundColor(
+                                                viewModel.selectedSortOption == option ?
+                                                    .white :
+                                                    AppTheme.primaryBlue
+                                            )
+                                            .cornerRadius(16)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 16)
+                                                    .stroke(AppTheme.primaryBlue, lineWidth: viewModel.selectedSortOption == option ? 0 : 1.5)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -295,7 +278,7 @@ struct LearnerDashboardView: View {
                                 ProgressView()
                                     .padding()
                             } else {
-                                let filteredCourses = getFilteredAndSortedCourses(from: courses)
+                                let filteredCourses = getFilteredAndSortedCourses(from: courses, isMyCourses: title == "My Courses")
                                 
                                 if filteredCourses.isEmpty {
                                     LearnerEmptyState(
@@ -352,30 +335,8 @@ struct LearnerDashboardView: View {
             .safeAreaInset(edge: .bottom) {
                 Color.clear.frame(height: 0)
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        Button(action: { showCertificates = true }) {
-                            Image(systemName: "seal.fill")
-                                .font(.system(size: 22))
-                                .foregroundColor(AppTheme.primaryBlue)
-                        }
-                        Button(action: { showProfile = true }) {
-                            Image(systemName: "person.circle")
-                                .font(.system(size: 24))
-                                .foregroundColor(AppTheme.primaryBlue)
-                        }
-                    }
-                }
-            }
         }
         .id(user.id)
-        .sheet(isPresented: $showProfile) {
-            ProfileView(user: user)
-        }
-        .task {
-            
-        }
     }
     
     private func handleLogout() {
@@ -385,7 +346,7 @@ struct LearnerDashboardView: View {
     }
     
     // Helper function (brought back from original to support filtering for both tabs)
-    private func getFilteredAndSortedCourses(from courses: [Course]) -> [Course] {
+    private func getFilteredAndSortedCourses(from courses: [Course], isMyCourses: Bool = false) -> [Course] {
         // 1. Apply search filter
         var filtered = courses
         if !viewModel.searchText.isEmpty {
@@ -400,7 +361,16 @@ struct LearnerDashboardView: View {
             filtered = filtered.filter { $0.category == category }
         }
         
-        // 3. Apply sorting
+        // 3. Apply Enrollment Filter if in "My Courses" tab
+        if isMyCourses {
+            filtered = viewModel.filteredEnrolledCourses.filter { enrolled in
+                // Cross-reference with basic filters (search/category) applied above
+                filtered.contains(where: { $0.id == enrolled.id })
+            }
+            return filtered // For "My Courses", we prioritize the enrollment filter
+        }
+        
+        // 4. Apply sorting (Default for Browse tab)
         switch viewModel.selectedSortOption {
         case .relevance:
             return filtered.sorted { $0.createdAt > $1.createdAt }

@@ -196,7 +196,6 @@ struct CertificatesListView: View {
     
     @StateObject private var certificateService = CertificateService()
     @State private var certificates: [Certificate] = []
-    @State private var selectedCertificate: Certificate?
     
     var body: some View {
         Group {
@@ -215,22 +214,17 @@ struct CertificatesListView: View {
         .task {
             await loadCertificates()
         }
-        .sheet(item: $selectedCertificate) { certificate in
-            NavigationView {
-                CertificateView(certificate: certificate)
-            }
-        }
     }
     
     private var certificatesList: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
                 ForEach(certificates) { certificate in
-                    CertificateCard(certificate: certificate)
-                        .onTapGesture {
-                            selectedCertificate = certificate
-                        }
-                        .fadeInOnAppear()
+                    NavigationLink(destination: CertificateView(certificate: certificate)) {
+                        CertificateCard(certificate: certificate)
+                    }
+                    .buttonStyle(.plain)
+                    .fadeInOnAppear()
                 }
             }
             .padding()
