@@ -160,22 +160,13 @@ struct EducatorDashboardView: View {
     // MARK: - Stats Section
     
     private var statsSection: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 16) {
-                StatGlassCard(
-                    icon: "book.fill",
-                    title: "Courses",
-                    value: "\(viewModel.totalCourses)",
-                    color: AppTheme.primaryBlue
-                )
-                
-                StatGlassCard(
-                    icon: "person.3.fill",
-                    title: "Enrollments",
-                    value: "\(viewModel.totalEnrollments)",
-                    color: AppTheme.successGreen
-                )
-            }
+        HStack(spacing: 16) {
+            StatGlassCard(
+                icon: "book.fill",
+                title: "Courses",
+                value: "\(viewModel.totalCourses)",
+                color: AppTheme.primaryBlue
+            )
             
             // Quiz Results Card with Navigation
             NavigationLink(destination: QuizResultsListView(educatorID: user.id)) {
@@ -238,6 +229,12 @@ struct EducatorDashboardView: View {
                 .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
             }
             .buttonStyle(PlainButtonStyle())
+            StatGlassCard(
+                icon: "person.3.fill",
+                title: "Enrollments",
+                value: "\(viewModel.totalEnrollments)",
+                color: AppTheme.successGreen
+            )
         }
     }
     
@@ -301,7 +298,7 @@ struct EducatorDashboardView: View {
             Button(viewModel.courseToDelete?.status == .pendingReview ? "Retract" : "Delete", role: .destructive) {
                 if let course = viewModel.courseToDelete {
                     Task {
-                        _ = await viewModel.deleteCourse(course)
+                        await viewModel.deleteCourse(course)
                         viewModel.courseToDelete = nil
                     }
                 }
@@ -322,7 +319,7 @@ struct EducatorDashboardView: View {
             Button("Unpublish", role: .destructive) {
                 if let course = viewModel.courseToUnpublish {
                     Task {
-                        _ = await viewModel.unpublishCourse(course)
+                        await viewModel.unpublishCourse(course)
                         viewModel.courseToUnpublish = nil
                     }
                 }

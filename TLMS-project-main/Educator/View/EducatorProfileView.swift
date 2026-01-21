@@ -90,10 +90,10 @@ struct EducatorProfileView: View {
                 }
             }
             // Photo Picker Changes
-            .onChange(of: selectedPhotoItem) { oldValue, newValue in
-                if let newValue = newValue {
+            .onChange(of: selectedPhotoItem) { newItem in
+                if let newItem = newItem {
                     Task {
-                        await viewModel.uploadProfilePicture(item: newValue)
+                        await viewModel.uploadProfilePicture(item: newItem)
                         selectedPhotoItem = nil
                     }
                 }
@@ -259,7 +259,7 @@ struct EducatorProfileView: View {
                             .font(.headline)
                             .foregroundColor(AppTheme.primaryText)
                         
-                        if let _ = viewModel.user?.resumeUrl {
+                        if let resumeUrl = viewModel.user?.resumeUrl {
                              Text("Resume uploaded")
                                 .font(.caption)
                                 .foregroundColor(AppTheme.successGreen)

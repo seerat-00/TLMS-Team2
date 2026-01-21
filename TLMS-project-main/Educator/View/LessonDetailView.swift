@@ -119,13 +119,19 @@ struct LessonDetailView: View {
                     .padding(.bottom, 30)
                 }
                 .navigationTitle("Edit Lesson")
-                .navigationDestination(isPresented: $navigateToContentEditor) {
-                    LessonContentEditorView(
-                        viewModel: viewModel,
-                        moduleID: moduleID,
-                        lessonID: lessonID
-                    )
-                }
+                .background(
+                    NavigationLink(
+                        destination: LessonContentEditorView(
+                            viewModel: viewModel,
+                            moduleID: moduleID,
+                            lessonID: lessonID
+                        ),
+                        isActive: $navigateToContentEditor
+                    ) {
+                        EmptyView()
+                    }
+                    .hidden()
+                )
             } else {
                 Text("Lesson not found")
                     .foregroundColor(.secondary)

@@ -175,10 +175,7 @@ class EducatorProfileViewModel: ObservableObject {
     
     func uploadProfilePicture(item: PhotosPickerItem) async {
         guard let userId = user?.id else { return }
-        guard let data = try? await item.loadTransferable(type: Data.self) else {
-            errorMessage = "Failed to load image data"
-            return
-        }
+        guard let data = try? await item.loadTransferable(type: Data.self) else { return }
         
         isUploadingImage = true
         errorMessage = nil
@@ -255,7 +252,7 @@ class EducatorProfileViewModel: ObservableObject {
         do {
             // 1. Remove from Storage (Optional, but keeps bucket clean)
             let filePath = "\(userId.uuidString)/avatar.jpg"
-            _ = try? await supabase.storage
+            try? await supabase.storage
                 .from("avatars")
                 .remove(paths: [filePath])
             

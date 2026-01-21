@@ -446,27 +446,38 @@ struct LessonInlineRow: View {
                         .foregroundColor(.red)
                         .font(.body)
                 }
+                
+                // Hidden NavigationLinks for programmatic navigation
+                NavigationLink(
+                    destination: LessonQuizEditorView(
+                        viewModel: viewModel,
+                        moduleID: moduleID,
+                        lessonID: lesson.id,
+                        lessonTitle: lesson.title
+                    ),
+                    isActive: $navigateToQuizEditor
+                ) {
+                    EmptyView()
+                }
+                .hidden()
+                
+                NavigationLink(
+                    destination: LessonContentEditorView(
+                        viewModel: viewModel,
+                        moduleID: moduleID,
+                        lessonID: lesson.id
+                    ),
+                    isActive: $navigateToContentEditor
+                ) {
+                    EmptyView()
+                }
+                .hidden()
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
             .background(Color(uiColor: .tertiarySystemGroupedBackground))
             .cornerRadius(8)
             .padding(.horizontal)
-            .navigationDestination(isPresented: $navigateToQuizEditor) {
-                LessonQuizEditorView(
-                    viewModel: viewModel,
-                    moduleID: moduleID,
-                    lessonID: lesson.id,
-                    lessonTitle: lesson.title
-                )
-            }
-            .navigationDestination(isPresented: $navigateToContentEditor) {
-                LessonContentEditorView(
-                    viewModel: viewModel,
-                    moduleID: moduleID,
-                    lessonID: lesson.id
-                )
-            }
             .alert("Delete Lesson", isPresented: $showDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete", role: .destructive) {
