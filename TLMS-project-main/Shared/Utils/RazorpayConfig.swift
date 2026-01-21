@@ -13,8 +13,7 @@ struct RazorpayConfig {
     
     static let keyId = "rzp_test_S3IPM0EvTm8nqL" // Test API Key
     static let keySecret = "bquN9K3z3Qr53O8Ka1Wk7yzn" // Test Key Secret
-    
-    // MARK: - Configuration
+
     
     static let isTestMode = true
     static let currency = "INR" // Indian Rupees
