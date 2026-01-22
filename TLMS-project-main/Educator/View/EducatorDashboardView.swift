@@ -164,20 +164,53 @@ struct EducatorDashboardView: View {
     // MARK: - Stats Section
     
     private var statsSection: some View {
-        HStack(spacing: 16) {
-            StatGlassCard(
-                icon: "book.fill",
-                title: "Courses",
-                value: "\(viewModel.totalCourses)",
-                color: AppTheme.primaryBlue
-            )
+        VStack(spacing: 12) {
+            HStack(spacing: 16) {
+                StatGlassCard(
+                    icon: "book.fill",
+                    title: "Courses",
+                    value: "\(viewModel.totalCourses)",
+                    color: AppTheme.primaryBlue
+                )
+                
+                StatGlassCard(
+                    icon: "person.3.fill",
+                    title: "Enrollments",
+                    value: "\(viewModel.totalEnrollments)",
+                    color: AppTheme.successGreen
+                )
+            }
             
-            StatGlassCard(
-                icon: "person.3.fill",
-                title: "Enrollments",
-                value: "\(viewModel.totalEnrollments)",
-                color: AppTheme.successGreen
-            )
+            // Quiz Results Card with Navigation
+            NavigationLink(destination: QuizResultsListView(educatorID: user.id)) {
+                HStack(spacing: 12) {
+                    Image(systemName: "chart.bar.doc.horizontal.fill")
+                        .font(.system(size: 24))
+                        .foregroundColor(.purple)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(viewModel.totalQuizSubmissions)")
+                            .font(.title2.bold())
+                            .foregroundColor(AppTheme.primaryText)
+                        
+                        Text("Quiz Submissions")
+                            .font(.subheadline)
+                            .foregroundColor(AppTheme.secondaryText)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(AppTheme.secondaryText)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .background(AppTheme.secondaryGroupedBackground)
+                .cornerRadius(AppTheme.cornerRadius)
+                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+            }
+            .buttonStyle(PlainButtonStyle())
         }
     }
     
@@ -193,15 +226,12 @@ struct EducatorDashboardView: View {
                 
                 LazyVStack(spacing: 16) {
                     ForEach(viewModel.draftCourses) { course in
-                        NavigationLink(destination: EducatorCoursePreviewView(courseId: course.id)) {
-                            CourseGlassCard(course: course, onDelete: {
-                                viewModel.confirmDelete(course)
-                            }, onEdit: {
-                                courseToEdit = course
-                                showCreateCourse = true
-                            }, showPreviewIcon: true)
-                        }
-                        .buttonStyle(PlainButtonStyle())
+                        CourseGlassCard(course: course, onDelete: {
+                            viewModel.confirmDelete(course)
+                        }, onEdit: {
+                            courseToEdit = course
+                            showCreateCourse = true
+                        }, educatorID: user.id)
                     }
                 }
             }
@@ -220,17 +250,38 @@ struct EducatorDashboardView: View {
                         if course.status == .pendingReview {
                             CourseGlassCard(course: course, onDelete: {
                                 viewModel.confirmDelete(course)
-                            })
+                            }, educatorID: user.id)
                         } else if course.status == .published {
-                            NavigationLink(destination: EducatorCoursePreviewView(courseId: course.id)) {
-                                CourseGlassCard(course: course, onUnpublish: {
-                                    viewModel.confirmUnpublish(course)
-                                }, showPreviewIcon: true)
-                            }
-                            .buttonStyle(PlainButtonStyle())
+                            CourseGlassCard(course: course, onUnpublish: {
+                                viewModel.confirmUnpublish(course)
+                            }, educatorID: user.id)
                         } else {
-                            CourseGlassCard(course: course)
+                            CourseGlassCard(course: course, educatorID: user.id)
                         }
+                    }
+                }
+            }
+            
+            // Rejected Courses Section
+            if !viewModel.rejectedCourses.isEmpty {
+                Text("Rejected Courses")
+                    .font(.title2.bold())
+                    .foregroundColor(.red)
+                    .padding(.top, viewModel.otherCourses.isEmpty && viewModel.draftCourses.isEmpty ? 0 : 8)
+                
+                LazyVStack(spacing: 16) {
+                    ForEach(viewModel.rejectedCourses) { course in
+                        CourseGlassCard(
+                            course: course,
+                            onDelete: {
+                                viewModel.confirmDelete(course)
+                            },
+                            onEdit: {
+                                courseToEdit = course
+                                showCreateCourse = true
+                            },
+                            educatorID: user.id
+                        )
                     }
                 }
             }
@@ -247,7 +298,7 @@ struct EducatorDashboardView: View {
             Button(viewModel.courseToDelete?.status == .pendingReview ? "Retract" : "Delete", role: .destructive) {
                 if let course = viewModel.courseToDelete {
                     Task {
-                        await viewModel.deleteCourse(course)
+                        _ = await viewModel.deleteCourse(course)
                         viewModel.courseToDelete = nil
                     }
                 }
@@ -268,7 +319,7 @@ struct EducatorDashboardView: View {
             Button("Unpublish", role: .destructive) {
                 if let course = viewModel.courseToUnpublish {
                     Task {
-                        await viewModel.unpublishCourse(course)
+                        _ = await viewModel.unpublishCourse(course)
                         viewModel.courseToUnpublish = nil
                     }
                 }
@@ -345,113 +396,136 @@ struct CourseGlassCard: View {
     var onDelete: (() -> Void)? = nil
     var onEdit: (() -> Void)? = nil
     var onUnpublish: (() -> Void)? = nil
-    var showPreviewIcon: Bool = false
+    var educatorID: UUID? = nil
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
-        HStack(spacing: 16) {
-            // Course Icon
-            ZStack {
-                RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
-                    .fill(AppTheme.primaryBlue.opacity(0.1))
-                    .frame(width: 60, height: 60)
-                
-                Image(systemName: "book.fill")
-                    .font(.system(size: 24))
-                    .foregroundColor(AppTheme.primaryBlue)
-            }
-            
-            // Course Info
-            VStack(alignment: .leading, spacing: 6) {
-                Text(course.title)
-                    .font(.headline)
-                    .foregroundColor(AppTheme.primaryText)
-                    .lineLimit(1)
-                
-                HStack(spacing: 8) {
-                    // Status Badge
-                    HStack(spacing: 4) {
-                        Image(systemName: course.status.icon)
-                            .font(.caption2)
-                        Text(course.status.displayName)
-                            .font(.caption2.weight(.medium))
-                    }
-                    .foregroundColor(course.status.color)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(course.status.color.opacity(0.1))
-                    .cornerRadius(6)
+        NavigationLink(destination: destinationView) {
+            HStack(spacing: 16) {
+                // Course Icon
+                ZStack {
+                    RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                        .fill(AppTheme.primaryBlue.opacity(0.1))
+                        .frame(width: 60, height: 60)
                     
-                    // Learner Count
-                    if course.learnerCount > 0 {
-                        HStack(spacing: 4) {
-                            Image(systemName: "person.2.fill")
-                                .font(.caption2)
-                            Text("\(course.learnerCount)")
-                                .font(.caption2)
-                        }
-                        .foregroundColor(AppTheme.secondaryText)
-                    }
-                }
-            }
-            
-            Spacer()
-            
-            // Action buttons
-            HStack(spacing: 12) {
-                // Preview icon for published courses
-                if showPreviewIcon {
-                    Image(systemName: "eye.fill")
-                        .font(.title3)
+                    Image(systemName: "book.fill")
+                        .font(.system(size: 24))
                         .foregroundColor(AppTheme.primaryBlue)
-                        .frame(width: 32, height: 32)
                 }
                 
-                // Edit button (arrow icon) for drafts
-                if let onEdit = onEdit {
-                    Button(action: onEdit) {
-                        Image(systemName: "arrow.right.circle.fill")
-                            .font(.title3)
-                            .foregroundColor(AppTheme.primaryBlue)
-                            .frame(width: 32, height: 32)
+                // Course Info
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(course.title)
+                        .font(.headline)
+                        .foregroundColor(AppTheme.primaryText)
+                        .lineLimit(1)
+                    
+                    HStack(spacing: 8) {
+                        // Status Badge
+                        HStack(spacing: 4) {
+                            Image(systemName: course.status.icon)
+                                .font(.caption2)
+                            Text(course.status.displayName)
+                                .font(.caption2.weight(.medium))
+                        }
+                        .foregroundColor(course.status.color)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(course.status.color.opacity(0.1))
+                        .cornerRadius(6)
+                        
+                        // Rating display
+                        if let rating = course.ratingAvg, course.ratingCount > 0 {
+                            HStack(spacing: 4) {
+                                Image(systemName: "star.fill")
+                                    .font(.caption2)
+                                    .foregroundColor(.orange)
+                                Text(String(format: "%.1f", rating))
+                                    .font(.caption2.weight(.medium))
+                                Text("(\(course.ratingCount))")
+                                    .font(.caption2)
+                            }
+                            .foregroundColor(AppTheme.secondaryText)
+                        }
+                        
+                        // Learner Count
+                        if course.learnerCount > 0 {
+                            HStack(spacing: 4) {
+                                Image(systemName: "person.2.fill")
+                                    .font(.caption2)
+                                Text("\(course.learnerCount)")
+                                    .font(.caption2)
+                            }
+                            .foregroundColor(AppTheme.secondaryText)
+                        }
                     }
-                    .buttonStyle(PlainButtonStyle())
                 }
                 
-                // Unpublish button for published courses
-                if let onUnpublish = onUnpublish {
-                    Button(action: onUnpublish) {
-                        Image(systemName: "arrow.uturn.down.circle.fill")
-                            .font(.title3)
-                            .foregroundColor(.orange)
-                            .frame(width: 32, height: 32)
+                Spacer()
+                
+                // Action buttons
+                HStack(spacing: 12) {
+                    // Edit button (arrow icon) for drafts
+                    if let onEdit = onEdit {
+                        Button(action: onEdit) {
+                            Image(systemName: "arrow.right.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(AppTheme.primaryBlue)
+                                .frame(width: 32, height: 32)
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
-                    .buttonStyle(PlainButtonStyle())
-                }
-                
-                // Delete button
-                if let onDelete = onDelete {
-                    Button(action: onDelete) {
-                        Image(systemName: "trash")
+                    
+                    // Unpublish button for published courses
+                    if let onUnpublish = onUnpublish {
+                        Button(action: onUnpublish) {
+                            Image(systemName: "arrow.uturn.down.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(.orange)
+                                .frame(width: 32, height: 32)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    
+                    // Delete button
+                    if let onDelete = onDelete {
+                        Button(action: onDelete) {
+                            Image(systemName: "trash")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(.red)
+                                .frame(width: 32, height: 32)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    
+                    // Chevron for navigation
+                    if onEdit == nil && onDelete == nil && onUnpublish == nil {
+                        Image(systemName: "chevron.right")
                             .font(.subheadline.weight(.semibold))
-                            .foregroundColor(.red)
-                            .frame(width: 32, height: 32)
+                            .foregroundColor(AppTheme.secondaryText)
                     }
-                    .buttonStyle(PlainButtonStyle())
-                }
-                
-                // Chevron for courses without actions
-                if onEdit == nil && onDelete == nil && onUnpublish == nil && !showPreviewIcon {
-                    Image(systemName: "chevron.right")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(AppTheme.secondaryText)
                 }
             }
+            .padding(16)
+            .background(AppTheme.secondaryGroupedBackground)
+            .cornerRadius(AppTheme.cornerRadius)
+            .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
         }
-        .padding(16)
-        .background(AppTheme.secondaryGroupedBackground)
-        .cornerRadius(AppTheme.cornerRadius)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    @ViewBuilder
+    private var destinationView: some View {
+        // Only navigate to reviews for published courses with ratings
+        if course.status == .published, let educatorID = educatorID, course.ratingCount > 0 {
+            CourseReviewsListView(
+                courseID: course.id,
+                courseTitle: course.title,
+                educatorID: educatorID
+            )
+        } else {
+            EmptyView()
+        }
     }
 }
 

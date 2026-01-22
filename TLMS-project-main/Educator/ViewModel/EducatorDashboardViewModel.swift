@@ -12,6 +12,7 @@ import Combine
 class EducatorDashboardViewModel: ObservableObject {
     @Published var totalCourses: Int = 0
     @Published var totalEnrollments: Int = 0
+    @Published var totalQuizSubmissions: Int = 0
     @Published var recentCourses: [DashboardCourse] = []
     @Published var courseToDelete: DashboardCourse?
     @Published var showDeleteConfirmation = false
@@ -32,7 +33,11 @@ class EducatorDashboardViewModel: ObservableObject {
     }
     
     var otherCourses: [DashboardCourse] {
-        recentCourses.filter { $0.status != .draft }
+        recentCourses.filter { $0.status != .draft && $0.status != .rejected }
+    }
+    
+    var rejectedCourses: [DashboardCourse] {
+        recentCourses.filter { $0.status == .rejected }
     }
     
     func loadData(educatorID: UUID) async {
@@ -47,7 +52,9 @@ class EducatorDashboardViewModel: ObservableObject {
                 id: course.id,
                 title: course.title,
                 status: course.status,
-                learnerCount: course.enrollmentCount
+                learnerCount: 0, // TODO: Implement enrollment count
+                ratingAvg: course.ratingAvg,
+                ratingCount: course.ratingCount
             )
         }
     }
@@ -81,7 +88,9 @@ class EducatorDashboardViewModel: ObservableObject {
                     id: course.id,
                     title: course.title,
                     status: .draft,
-                    learnerCount: course.learnerCount
+                    learnerCount: course.learnerCount,
+                    ratingAvg: course.ratingAvg,
+                    ratingCount: course.ratingCount
                 )
             }
         }
@@ -96,4 +105,6 @@ struct DashboardCourse: Identifiable {
     let title: String
     let status: CourseStatus
     let learnerCount: Int
+    let ratingAvg: Double?
+    let ratingCount: Int
 }
