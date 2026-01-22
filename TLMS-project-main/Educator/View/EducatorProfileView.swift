@@ -298,6 +298,23 @@ struct EducatorProfileView: View {
     
     private var accountActionsSection: some View {
         VStack(spacing: 1) {
+            // Accessibility
+            NavigationLink(destination: ThemeSelectionView()) {
+                HStack {
+                    Label("Color Theme / Accessibility", systemImage: "eyedropper")
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(AppTheme.secondaryGroupedBackground)
+            }
+            .buttonStyle(.plain)
+            
+            Divider()
+                .padding(.leading, 50)
+            
             // Change Password
             NavigationLink(destination: ChangePasswordView()) {
                 HStack {
