@@ -8,22 +8,25 @@
 import SwiftUI
 
 struct AppTheme {
-    // MARK: - Premium Color Palette (HSL-based for better dark mode)
+    // MARK: - Premium Color Palette (Adaptive)
+    
+    // Helper to get current theme manager
+    static var theme: ThemeManager { ThemeManager.shared }
     
     // Primary Brand Colors - Sophisticated Blue Palette
-    static let primaryBlue = Color(hue: 0.58, saturation: 0.85, brightness: 0.95)
-    static let primaryBlueDark = Color(hue: 0.58, saturation: 0.90, brightness: 0.75)
-    static let primaryAccent = primaryBlue
+    static var primaryBlue: Color { theme.primaryColor }
+    static let primaryBlueDark = Color(hue: 0.58, saturation: 0.90, brightness: 0.75) // Kept static for depth
+    static var primaryAccent: Color { theme.primaryColor }
     
     // Vibrant Accent Colors
-    static let accentPurple = Color(hue: 0.75, saturation: 0.70, brightness: 0.90)
+    static var accentPurple: Color { theme.accentColor }
     static let accentCyan = Color(hue: 0.52, saturation: 0.75, brightness: 0.92)
     static let accentTeal = Color(hue: 0.48, saturation: 0.65, brightness: 0.88)
     
     // Semantic Colors
-    static let successGreen = Color(hue: 0.33, saturation: 0.75, brightness: 0.65)
-    static let warningOrange = Color(hue: 0.08, saturation: 0.85, brightness: 0.95)
-    static let errorRed = Color(hue: 0.98, saturation: 0.85, brightness: 0.90)
+    static var successGreen: Color { theme.successColor }
+    static var warningOrange: Color { theme.warningColor }
+    static var errorRed: Color { theme.errorColor }
     static let infoBlue = Color(hue: 0.58, saturation: 0.70, brightness: 0.95)
     
     // Neutral Colors (Adaptive)
@@ -43,9 +46,9 @@ struct AppTheme {
     static var oceanGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(hue: 0.58, saturation: 0.85, brightness: 0.95),
-                Color(hue: 0.52, saturation: 0.75, brightness: 0.92),
-                Color(hue: 0.48, saturation: 0.65, brightness: 0.88)
+                theme.primaryColor,
+                theme.primaryColor.opacity(0.8),
+                theme.primaryColor.opacity(0.6)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -55,9 +58,9 @@ struct AppTheme {
     static var sunsetGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(hue: 0.08, saturation: 0.85, brightness: 0.95),
-                Color(hue: 0.98, saturation: 0.85, brightness: 0.90),
-                Color(hue: 0.75, saturation: 0.70, brightness: 0.90)
+                theme.warningColor,
+                theme.errorColor,
+                theme.accentColor
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -67,9 +70,9 @@ struct AppTheme {
     static var twilightGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(hue: 0.75, saturation: 0.70, brightness: 0.90),
-                Color(hue: 0.58, saturation: 0.85, brightness: 0.95),
-                Color(hue: 0.52, saturation: 0.75, brightness: 0.92)
+                theme.accentColor,
+                theme.primaryColor,
+                theme.primaryColor.opacity(0.8)
             ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -79,8 +82,8 @@ struct AppTheme {
     static var successGradient: LinearGradient {
         LinearGradient(
             colors: [
-                Color(hue: 0.33, saturation: 0.75, brightness: 0.65),
-                Color(hue: 0.40, saturation: 0.70, brightness: 0.75)
+                theme.successColor,
+                theme.successColor.opacity(0.8)
             ],
             startPoint: .leading,
             endPoint: .trailing
