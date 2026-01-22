@@ -20,6 +20,10 @@ struct LessonContentEditorView: View {
     @State private var selectedFileURL: URL?
     @State private var selectedFileName: String?
     @State private var showSuccessAlert = false
+    @State private var isUploading = false
+    @State private var uploadError: String?
+    
+    @StateObject private var storageService = StorageService()
     
     // Derived binding to get the lesson
     private var lesson: Lesson? {
@@ -99,7 +103,11 @@ struct LessonContentEditorView: View {
                         }
                         
                         // Save Button
-                        Button(action: saveContent) {
+                        Button(action: {
+                            Task {
+                                await saveContent()
+                            }
+                        }) {
                             HStack {
                                 Image(systemName: "checkmark.circle.fill")
                                 Text("Save Content")
@@ -137,6 +145,36 @@ struct LessonContentEditorView: View {
         .sheet(isPresented: $showFilePicker) {
             filePickerForType()
         }
+        .overlay {
+            if isUploading {
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 20) {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .tint(.white)
+                        
+                        Text("Uploading file...")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                    }
+                    .padding(40)
+                    .background(AppTheme.primaryBlue)
+                    .cornerRadius(20)
+                }
+            }
+        }
+        .alert("Upload Error", isPresented: .constant(uploadError != nil)) {
+            Button("OK") {
+                uploadError = nil
+            }
+        } message: {
+            if let error = uploadError {
+                Text(error)
+            }
+        }
     }
     
     // MARK: - Helper Methods
@@ -158,7 +196,7 @@ struct LessonContentEditorView: View {
         }
     }
     
-    private func saveContent() {
+    private func saveContent() async {
         guard let moduleIndex = viewModel.newCourse.modules.firstIndex(where: { $0.id == moduleID }),
               let lessonIndex = viewModel.newCourse.modules[moduleIndex].lessons.firstIndex(where: { $0.id == lessonID }) else {
             return
@@ -174,10 +212,24 @@ struct LessonContentEditorView: View {
             updatedLesson.contentDescription = contentDescription
             updatedLesson.fileName = selectedFileName
             
-            // In a real app, you would upload the file here and get a URL
-            // For now, we'll store the local URL as a string
-            if let url = selectedFileURL {
-                updatedLesson.fileURL = url.path
+            // Upload file to Supabase Storage if a new file is selected
+            if let localURL = selectedFileURL {
+                isUploading = true
+                do {
+                    // Upload to Supabase Storage and get public URL
+                    let publicURL = try await storageService.uploadFile(
+                        fileURL: localURL,
+                        fileName: selectedFileName ?? "file"
+                    )
+                    updatedLesson.fileURL = publicURL
+                    print("✅ File uploaded successfully: \(publicURL)")
+                } catch {
+                    isUploading = false
+                    uploadError = "Failed to upload file: \(error.localizedDescription)"
+                    print("❌ Upload error: \(error)")
+                    return
+                }
+                isUploading = false
             }
             
         case .quiz:

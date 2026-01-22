@@ -127,8 +127,15 @@ struct DocumentViewer: View {
     private func validateDocument() {
         // Simulate loading delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            // Check if URL is accessible
-            guard FileManager.default.fileExists(atPath: url.path) || url.scheme == "http" || url.scheme == "https" else {
+            // For remote URLs (http/https), skip file existence check
+            if url.scheme == "http" || url.scheme == "https" {
+                print("✅ Loading remote document: \(url.absoluteString)")
+                isLoading = false
+                return
+            }
+            
+            // For local files, check if they exist
+            guard FileManager.default.fileExists(atPath: url.path) else {
                 loadError = "The document file could not be found. Please check the file path."
                 isLoading = false
                 return
