@@ -28,13 +28,37 @@ class CourseService: ObservableObject {
         defer { isLoading = false }
         
         do {
-            let courses: [Course] = try await supabase
+            // 1. Fetch courses
+            var courses: [Course] = try await supabase
                 .from("courses")
                 .select()
                 .eq("educator_id", value: educatorID.uuidString)
                 .order("updated_at", ascending: false)
                 .execute()
                 .value
+            
+            if courses.isEmpty { return [] }
+            
+            // 2. Fetch enrollments for these courses
+            let courseIds = courses.map { $0.id.uuidString }
+            let enrollments: [Enrollment] = try await supabase
+                .from("enrollments")
+                .select()
+                .in("course_id", values: courseIds)
+                .execute()
+                .value
+            
+            // 3. Calculate counts
+            var enrollmentCounts: [UUID: Int] = [:]
+            for enrollment in enrollments {
+                enrollmentCounts[enrollment.courseID, default: 0] += 1
+            }
+            
+            // 4. Update courses with counts
+            for i in 0..<courses.count {
+                courses[i].enrollmentCount = enrollmentCounts[courses[i].id] ?? 0
+            }
+            
             return courses
         } catch {
             errorMessage = "Failed to fetch courses: \(error.localizedDescription)"

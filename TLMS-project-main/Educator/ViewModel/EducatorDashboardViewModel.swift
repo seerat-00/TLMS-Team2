@@ -39,6 +39,7 @@ class EducatorDashboardViewModel: ObservableObject {
         let courses = await courseService.fetchCourses(for: educatorID)
         
         self.totalCourses = courses.count
+        self.totalEnrollments = courses.reduce(0) { $0 + $1.enrollmentCount }
         
         // Map to DashboardCourse for display
         self.recentCourses = courses.map { course in
@@ -46,7 +47,7 @@ class EducatorDashboardViewModel: ObservableObject {
                 id: course.id,
                 title: course.title,
                 status: course.status,
-                learnerCount: 0 // TODO: Implement enrollment count
+                learnerCount: course.enrollmentCount
             )
         }
     }
