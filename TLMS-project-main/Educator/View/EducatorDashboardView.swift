@@ -168,67 +168,6 @@ struct EducatorDashboardView: View {
                 color: AppTheme.primaryBlue
             )
             
-            // Quiz Results Card with Navigation
-            NavigationLink(destination: QuizResultsListView(educatorID: user.id)) {
-                HStack(spacing: 12) {
-                    Image(systemName: "chart.bar.doc.horizontal.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(.purple)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("\(viewModel.totalQuizSubmissions)")
-                            .font(.title2.bold())
-                            .foregroundColor(AppTheme.primaryText)
-                        
-                        Text("Quiz Submissions")
-                            .font(.subheadline)
-                            .foregroundColor(AppTheme.secondaryText)
-                    }
-                    
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(AppTheme.secondaryText)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(16)
-                .background(AppTheme.secondaryGroupedBackground)
-                .cornerRadius(AppTheme.cornerRadius)
-                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-            }
-            .buttonStyle(PlainButtonStyle())
-
-            // Course Feedback Card
-            NavigationLink(destination: EducatorFeedbackView(educatorId: user.id)) {
-                HStack(spacing: 12) {
-                    Image(systemName: "star.bubble.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(.orange)
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Course Feedback")
-                            .font(.title3.bold())
-                            .foregroundColor(AppTheme.primaryText)
-                        
-                        Text("View and moderate reviews")
-                            .font(.subheadline)
-                            .foregroundColor(AppTheme.secondaryText)
-                    }
-                    
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(AppTheme.secondaryText)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(16)
-                .background(AppTheme.secondaryGroupedBackground)
-                .cornerRadius(AppTheme.cornerRadius)
-                .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
-            }
-            .buttonStyle(PlainButtonStyle())
             StatGlassCard(
                 icon: "person.3.fill",
                 title: "Enrollments",

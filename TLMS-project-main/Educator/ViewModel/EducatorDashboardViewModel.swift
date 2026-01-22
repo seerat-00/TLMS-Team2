@@ -12,7 +12,6 @@ import Combine
 class EducatorDashboardViewModel: ObservableObject {
     @Published var totalCourses: Int = 0
     @Published var totalEnrollments: Int = 0
-    @Published var totalQuizSubmissions: Int = 0
     @Published var recentCourses: [DashboardCourse] = []
     @Published var courseToDelete: DashboardCourse?
     @Published var showDeleteConfirmation = false
