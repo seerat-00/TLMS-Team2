@@ -29,8 +29,10 @@ final class LearnerDashboardViewModel: ObservableObject {
     @Published var selectedCategory: String? = nil
     @Published var selectedSortOption: CourseSortOption = .relevance
     
-   
-
+    // Completed course metadata for Relevance sorting
+    @Published private(set) var completedCourseCategories: Set<String> = []
+    @Published private(set) var completedCourseEducators: Set<UUID> = []
+    
     
     private let courseService = CourseService()
     
@@ -270,6 +272,11 @@ final class LearnerDashboardViewModel: ObservableObject {
             let completed = rows.filter { $0.progress >= 1.0 }
             self.completedCoursesCount = completed.count
             self.completedCourseIds = Set(completed.map { $0.courseId })
+            
+            // Extract categories and educators from completed enrolled courses
+            let completedCourses = enrolledCourses.filter { completedCourseIds.contains($0.id) }
+            self.completedCourseCategories = Set(completedCourses.map { $0.category })
+            self.completedCourseEducators = Set(completedCourses.map { $0.educatorID })
         } catch {
             print("Failed to calculate completed courses:", error)
         }

@@ -23,6 +23,7 @@ struct LearnerDashboardView: View {
             courseListView(courses: viewModel.publishedCourses.filter { course in
                 !viewModel.isEnrolled(course)
             }, title: "Browse Courses", showSearch: false)
+            .id(dashboardRefreshTrigger)
             .tabItem {
                 Label("Browse", systemImage: "book.fill")
             }
@@ -302,6 +303,7 @@ struct LearnerDashboardView: View {
                                                                 onEnroll: {
                                                                     let success = await viewModel.enroll(course: course, userId: user.id)
                                                                     if success {
+                                                                        dashboardRefreshTrigger = UUID()
                                                                         selectedTab = 1
                                                                     }
                                                                 }
@@ -314,6 +316,7 @@ struct LearnerDashboardView: View {
                                                     onEnroll: {
                                                         let success = await viewModel.enroll(course: course, userId: user.id)
                                                         if success {
+                                                            dashboardRefreshTrigger = UUID()
                                                             selectedTab = 1
                                                         }
                                                     }
@@ -373,15 +376,60 @@ struct LearnerDashboardView: View {
         // 4. Apply sorting (Default for Browse tab)
         switch viewModel.selectedSortOption {
         case .relevance:
-            // Relevance: Sort by most recently created courses first
-            return filtered.sorted { $0.createdAt > $1.createdAt }
+            // Sort by relevance: prioritize courses matching completed course categories/educators
+            return filtered.sorted { course1, course2 in
+                let score1 = relevanceScore(for: course1)
+                let score2 = relevanceScore(for: course2)
+                
+                if score1 != score2 {
+                    return score1 > score2 // Higher score first
+                }
+                // If same relevance score, sort by newest
+                return course1.createdAt > course2.createdAt
+            }
+            
         case .popularity:
-            // Popularity: Sort by highest enrollment count first
-            return filtered.sorted { $0.enrollmentCount > $1.enrollmentCount }
+            // Sort by enrollment count (descending)
+            print("DEBUG: Sorting by popularity")
+            for course in filtered.prefix(5) {
+                print("  - \(course.title): enrollmentCount=\(course.enrollmentCount)")
+            }
+            return filtered.sorted { course1, course2 in
+                let count1 = course1.enrollmentCount
+                let count2 = course2.enrollmentCount
+                
+                if count1 != count2 {
+                    return count1 > count2
+                }
+                // If same enrollment count, sort by newest
+                return course1.createdAt > course2.createdAt
+            }
+            
         case .newest:
-            // Newest: Sort by most recently created courses first
+            // Sort by creation date (newest first)
+            print("DEBUG: Sorting by newest")
+            for course in filtered.prefix(5) {
+                print("  - \(course.title): createdAt=\(course.createdAt)")
+            }
             return filtered.sorted { $0.createdAt > $1.createdAt }
         }
+    }
+    
+    // Calculate relevance score based on completed courses
+    private func relevanceScore(for course: Course) -> Int {
+        var score = 0
+        
+        // +2 points if course category matches completed course categories
+        if viewModel.completedCourseCategories.contains(course.category) {
+            score += 2
+        }
+        
+        // +1 point if course educator matches completed course educators
+        if viewModel.completedCourseEducators.contains(course.educatorID) {
+            score += 1
+        }
+        
+        return score
     }
     
     private func iconForCategory(_ category: String) -> String {
