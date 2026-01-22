@@ -178,46 +178,75 @@ struct LessonRow: View {
     let lesson: Lesson
     var onDelete: () -> Void
     
+    // Content type colors - uniform blue
+    var contentTypeColor: Color {
+        return Color(red: 0.2, green: 0.6, blue: 1.0)
+    }
+    
     var body: some View {
         HStack(spacing: 16) {
+            // Left Section: Large Content-Type Icon
             ZStack {
-                Circle()
-                    .fill(Color.blue.opacity(0.1))
-                    .frame(width: 44, height: 44)
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(contentTypeColor.opacity(0.15))
+                    .frame(width: 70, height: 70)
                 
                 Image(systemName: lesson.type.icon)
-                    .foregroundColor(.blue)
+                    .font(.system(size: 28))
+                    .foregroundColor(contentTypeColor)
             }
             
-            VStack(alignment: .leading, spacing: 4) {
+            // Middle Section: Lesson Title and Action Buttons
+            VStack(alignment: .leading, spacing: 8) {
                 Text(lesson.title)
                     .font(.headline)
                     .foregroundColor(.primary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
                 
-                Text(lesson.type.rawValue)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(Color.secondary.opacity(0.1))
-                    .cornerRadius(4)
+                HStack(spacing: 8) {
+                    // Type Badge
+                    HStack(spacing: 4) {
+                        Image(systemName: lesson.type.icon)
+                            .font(.system(size: 10))
+                        Text(lesson.type.shortName)
+                            .font(.caption.weight(.medium))
+                    }
+                    .foregroundColor(contentTypeColor)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(contentTypeColor.opacity(0.15))
+                    .cornerRadius(6)
+                    
+                    // Edit Indicator
+                    HStack(spacing: 4) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 10))
+                        Text("Edit")
+                            .font(.caption.weight(.medium))
+                    }
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(6)
+                }
             }
             
             Spacer()
             
-            Image(systemName: "chevron.right")
-                .foregroundColor(.secondary)
-                .font(.caption)
+            // Right Section: Delete Button
+            Button(action: onDelete) {
+                Image(systemName: "trash.fill")
+                    .font(.system(size: 20))
+                    .foregroundColor(.red)
+            }
+            .buttonStyle(PlainButtonStyle())
         }
         .padding()
         .background(Color(uiColor: .secondarySystemGroupedBackground))
         .cornerRadius(12)
         .padding(.horizontal)
-        .shadow(color: Color.black.opacity(0.03), radius: 5, x: 0, y: 2)
-        .contextMenu {
-            Button(role: .destructive, action: onDelete) {
-                Label("Delete", systemImage: "trash")
-            }
-        }
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }

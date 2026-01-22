@@ -217,6 +217,7 @@ struct EducatorDashboardView: View {
                     ForEach(viewModel.otherCourses) { course in
                         // Show delete button for pending review courses (can be retracted)
                         // Show unpublish button for published courses
+                        // Show edit button for rejected courses
                         if course.status == .pendingReview {
                             CourseGlassCard(course: course, onDelete: {
                                 viewModel.confirmDelete(course)
@@ -228,6 +229,11 @@ struct EducatorDashboardView: View {
                                 }, showPreviewIcon: true)
                             }
                             .buttonStyle(PlainButtonStyle())
+                        } else if course.status == .rejected {
+                            CourseGlassCard(course: course, onEdit: {
+                                courseToEdit = course
+                                showCreateCourse = true
+                            })
                         } else {
                             CourseGlassCard(course: course)
                         }

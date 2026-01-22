@@ -22,19 +22,6 @@ struct CreateCourseView: View {
             
             ScrollView {
                 VStack(spacing: 24) {
-                    // Header
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Create Course")
-                            .font(.largeTitle.bold())
-                        
-                        Text("Start by providing the basic details for your course.")
-                            .font(.body)
-                            .foregroundColor(AppTheme.secondaryText)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                    .padding(.top)
-                    
                     // Form Fields
                     VStack(spacing: 20) {
                         // Title
@@ -166,7 +153,8 @@ struct CreateCourseView: View {
                 }
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle("Create Course")
+        .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button(action: {

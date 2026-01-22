@@ -12,6 +12,7 @@ struct EducatorCoursePreviewView: View {
     @State private var expandedModules: Set<UUID> = []
     @State private var selectedLesson: Lesson?
     @State private var showLessonContent = false
+    @State private var selectedTab = 0 // 0 = Content, 1 = Reviews
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -23,39 +24,60 @@ struct EducatorCoursePreviewView: View {
                 ProgressView("Loading course...")
                     .progressViewStyle(CircularProgressViewStyle(tint: AppTheme.primaryAccent))
             } else if let course = course {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
-                        // Course Header
-                        courseHeaderView(course: course)
-                        
-                        // Course Content
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Course Content")
-                                .font(.title2.bold())
-                                .foregroundColor(AppTheme.primaryText)
-                                .padding(.horizontal)
-                            
-                            ForEach(Array(course.modules.enumerated()), id: \.element.id) { index, module in
-                                ModulePreviewCard(
-                                    module: module,
-                                    moduleNumber: index + 1,
-                                    isExpanded: expandedModules.contains(module.id),
-                                    isEnrolled: true,
-                                    onToggle: {
-                                        if expandedModules.contains(module.id) {
-                                            expandedModules.remove(module.id)
-                                        } else {
-                                            expandedModules.insert(module.id)
-                                        }
-                                    },
-                                    onLessonTap: { lesson in
-                                        selectedLesson = lesson
-                                        showLessonContent = true
-                                    }
-                                )
-                            }
+                VStack(spacing: 0) {
+                    // Course Header (Fixed, non-scrollable)
+                    courseHeaderView(course: course)
+                    
+                    // Tab Selector
+                    HStack(spacing: 0) {
+                        TabButton(title: "Content", isSelected: selectedTab == 0) {
+                            selectedTab = 0
                         }
-                        .padding(.bottom, 40)
+                        
+                        TabButton(title: "Reviews", isSelected: selectedTab == 1) {
+                            selectedTab = 1
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 8)
+                    .background(AppTheme.groupedBackground)
+                    
+                    // Tab Content (Scrollable)
+                    if selectedTab == 0 {
+                        // Course Content Tab
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Course Content")
+                                    .font(.title2.bold())
+                                    .foregroundColor(AppTheme.primaryText)
+                                    .padding(.horizontal)
+                                    .padding(.top)
+                                
+                                ForEach(Array(course.modules.enumerated()), id: \.element.id) { index, module in
+                                    ModulePreviewCard(
+                                        module: module,
+                                        moduleNumber: index + 1,
+                                        isExpanded: expandedModules.contains(module.id),
+                                        isEnrolled: true,
+                                        onToggle: {
+                                            if expandedModules.contains(module.id) {
+                                                expandedModules.remove(module.id)
+                                            } else {
+                                                expandedModules.insert(module.id)
+                                            }
+                                        },
+                                        onLessonTap: { lesson in
+                                            selectedLesson = lesson
+                                            showLessonContent = true
+                                        }
+                                    )
+                                }
+                            }
+                            .padding(.bottom, 40)
+                        }
+                    } else {
+                        // Reviews Tab
+                        EducatorCourseReviewsView(courseID: course.id)
                     }
                 }
             } else {
@@ -115,12 +137,12 @@ struct EducatorCoursePreviewView: View {
                 
                 // Course metadata
                 HStack(spacing: 16) {
-                    Label(course.level.rawValue, systemImage: "chart.bar.fill")
-                        .font(.subheadline)
-                        .foregroundColor(AppTheme.secondaryText)
+//                    Label(course.level.rawValue, systemImage: "chart.bar.fill")
+//                        .font(.subheadline)
+//                        .foregroundColor(AppTheme.secondaryText)
                     
                     if let price = course.price {
-                        Label("$\(String(format: "%.2f", price))", systemImage: "dollarsign.circle.fill")
+                        Label("₹\(String(format: "%.2f", price))", systemImage: "rupee.circle.fill")
                             .font(.subheadline)
                             .foregroundColor(AppTheme.successGreen)
                     } else {
@@ -503,5 +525,28 @@ struct EducatorQuestionPreviewCard: View {
         .background(AppTheme.secondaryGroupedBackground)
         .cornerRadius(AppTheme.cornerRadius)
         .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+    }
+}
+
+// MARK: - Tab Button
+
+struct TabButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Text(title)
+                    .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                    .foregroundColor(isSelected ? AppTheme.primaryBlue : AppTheme.secondaryText)
+                
+                Rectangle()
+                    .fill(isSelected ? AppTheme.primaryBlue : Color.clear)
+                    .frame(height: 2)
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 }

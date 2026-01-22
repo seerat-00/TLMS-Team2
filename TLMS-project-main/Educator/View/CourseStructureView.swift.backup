@@ -15,6 +15,7 @@ struct CourseStructureView: View {
     @State private var expandedModules: Set<UUID> = []
     @State private var newLessonName = ""
     @State private var showingAddLessonFor: UUID?
+    @State private var showEditCourseDetails = false
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
