@@ -28,6 +28,8 @@ class CourseService: ObservableObject {
         defer { isLoading = false }
         
         do {
+            print("DEBUG: fetching courses for educator: \(educatorID)")
+            
             // 1. Fetch courses
             var courses: [Course] = try await supabase
                 .from("courses")
@@ -39,28 +41,56 @@ class CourseService: ObservableObject {
             
             if courses.isEmpty { return [] }
             
-            // 2. Fetch enrollments for these courses
-            let courseIds = courses.map { $0.id.uuidString }
-            let enrollments: [Enrollment] = try await supabase
-                .from("enrollments")
-                .select()
-                .in("course_id", values: courseIds)
-                .execute()
-                .value
-            
-            // 3. Calculate counts
-            var enrollmentCounts: [UUID: Int] = [:]
-            for enrollment in enrollments {
-                enrollmentCounts[enrollment.courseID, default: 0] += 1
+            // 2. Fetch enrollment counts
+            // Try efficient RPC first
+            struct EnrollmentCountRPC: Decodable {
+                let course_id: UUID
+                let count: Int
             }
             
-            // 4. Update courses with counts
+            var enrollmentCounts: [UUID: Int] = [:]
+            
+            do {
+                let rpcCounts: [EnrollmentCountRPC] = try await supabase
+                    .rpc("get_educator_enrollment_counts", params: ["educator_uuid": educatorID.uuidString])
+                    .execute()
+                    .value
+                
+                for item in rpcCounts {
+                    enrollmentCounts[item.course_id] = item.count
+                }
+                print("DEBUG: Fetched enrollment counts via RPC")
+                
+            } catch {
+                print("DEBUG: RPC failed (likely not created), falling back to manual fetch. Error: \(error)")
+                
+                // Fallback: Manual Fetch (prone to RLS issues if policy not set)
+                struct EnrollmentID: Decodable {
+                    let courseID: UUID
+                    enum CodingKeys: String, CodingKey { case courseID = "course_id" }
+                }
+                
+                let courseIds = courses.map { $0.id.uuidString }
+                let enrollments: [EnrollmentID] = try await supabase
+                    .from("enrollments")
+                    .select("course_id")
+                    .in("course_id", values: courseIds)
+                    .execute()
+                    .value
+                
+                for enrollment in enrollments {
+                    enrollmentCounts[enrollment.courseID, default: 0] += 1
+                }
+            }
+            
+            // 3. Update courses
             for i in 0..<courses.count {
                 courses[i].enrollmentCount = enrollmentCounts[courses[i].id] ?? 0
             }
             
             return courses
         } catch {
+            print("ERROR: Fetch courses failed: \(error)")
             errorMessage = "Failed to fetch courses: \(error.localizedDescription)"
             return []
         }
