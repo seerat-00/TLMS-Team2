@@ -146,6 +146,8 @@ struct AdminCourseDetailView: View {
                                         Text(price.formatted(.currency(code: "INR")))
                                             .font(.system(size: 18, weight: .bold))
                                             .foregroundColor(AppTheme.primaryText)
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.8)
                                     }
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     
@@ -158,6 +160,8 @@ struct AdminCourseDetailView: View {
                                             Text(split.educator.formatted(.currency(code: "INR")))
                                                 .font(.system(size: 16, weight: .bold))
                                                 .foregroundColor(AppTheme.primaryBlue)
+                                                .lineLimit(1)
+                                                .minimumScaleFactor(0.8)
                                         }
                                         
                                         Rectangle()
@@ -171,6 +175,8 @@ struct AdminCourseDetailView: View {
                                             Text(split.admin.formatted(.currency(code: "INR")))
                                                 .font(.system(size: 16, weight: .bold))
                                                 .foregroundColor(.purple)
+                                                .lineLimit(1)
+                                                .minimumScaleFactor(0.8)
                                         }
                                     }
                                 }
