@@ -18,159 +18,131 @@ struct CourseStructureView: View {
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        NavigationStack(path: $viewModel.navigationPath) {
-            ZStack {
-                AppTheme.groupedBackground
-                    .ignoresSafeArea()
-                
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 32) {
-                        // Header
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Course Structure")
-                                .font(.system(size: 34, weight: .bold))
+        ZStack {
+            AppTheme.groupedBackground
+                .ignoresSafeArea()
+            
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 32) {
+                    // Header
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Course Structure")
+                            .font(.system(size: 34, weight: .bold))
+                            .foregroundColor(AppTheme.primaryText)
+                            .lineLimit(1)
+                        
+                        Text("Organize modules and lessons. Keep it simple and effective.")
+                            .font(.body)
+                            .foregroundColor(AppTheme.secondaryText)
+                            .lineLimit(1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+                    
+                    // Modules List
+                    VStack(alignment: .leading, spacing: 20) {
+                        HStack {
+                            Text("Curriculum")
+                                .font(.title2.bold())
                                 .foregroundColor(AppTheme.primaryText)
                                 .lineLimit(1)
                             
-                            Text("Organize modules and lessons. Keep it simple and effective.")
-                                .font(.body)
-                                .foregroundColor(AppTheme.secondaryText)
-                                .lineLimit(1)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 20)
-                        
-                        // Modules List
-                        VStack(alignment: .leading, spacing: 20) {
-                            HStack {
-                                Text("Curriculum")
-                                    .font(.title2.bold())
-                                    .foregroundColor(AppTheme.primaryText)
-                                    .lineLimit(1)
-                                
-                                Spacer()
-                                
-                                Button(action: {
-                                    withAnimation(.spring()) {
-                                        viewModel.addModule()
-                                        if let lastModule = viewModel.newCourse.modules.last {
-                                            expandedModules.insert(lastModule.id)
-                                        }
-                                    }
-                                }) {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "plus.circle.fill")
-                                        Text("Add Module")
-                                    }
-                                    .font(.subheadline.bold())
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(AppTheme.primaryBlue)
-                                    .foregroundColor(.white)
-                                    .cornerRadius(20)
-                                    .shadow(color: AppTheme.primaryBlue.opacity(0.3), radius: 5, y: 3)
-                                }
-                            }
-                            .padding(.horizontal)
+                            Spacer()
                             
-                            if viewModel.newCourse.modules.isEmpty {
-                                EmptyStateView(
-                                    icon: "folder.badge.plus",
-                                    title: "No Modules Yet",
-                                    message: "Start building your curriculum."
-                                )
-                                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                .padding(.top, 100)
-                            } else {
-                                ForEach(viewModel.newCourse.modules) { module in
-                                    ExpandableModuleCard(
-                                        module: module,
-                                        viewModel: viewModel,
-                                        isExpanded: expandedModules.contains(module.id),
-                                        isEditing: isEditingModuleID == module.id,
-                                        editingTitle: $editingTitle,
-                                        editingDescription: $editingDescription,
-                                        newLessonName: $newLessonName,
-                                        showingAddLessonFor: $showingAddLessonFor,
-                                        onToggleExpand: {
-                                            withAnimation(.easeInOut(duration: 0.2)) {
-                                                if expandedModules.contains(module.id) {
-                                                    expandedModules.remove(module.id)
-                                                } else {
-                                                    expandedModules.insert(module.id)
-                                                }
-                                            }
-                                        },
-                                        onEditStart: {
-                                            editingTitle = module.title
-                                            editingDescription = module.description ?? ""
-                                            isEditingModuleID = module.id
-                                        },
-                                        onEditEnd: {
-                                            if !editingTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                                var updatedModule = module
-                                                updatedModule.title = editingTitle
-                                                updatedModule.description = editingDescription.isEmpty ? nil : editingDescription
-                                                viewModel.updateModule(updatedModule)
-                                            }
-                                            isEditingModuleID = nil
-                                        },
-                                        onDelete: {
-                                            if let index = viewModel.newCourse.modules.firstIndex(where: { $0.id == module.id }) {
-                                                viewModel.deleteModule(at: IndexSet(integer: index))
+                            Button(action: {
+                                withAnimation(.spring()) {
+                                    viewModel.addModule()
+                                    if let lastModule = viewModel.newCourse.modules.last {
+                                        expandedModules.insert(lastModule.id)
+                                    }
+                                }
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "plus.circle.fill")
+                                    Text("Add Module")
+                                }
+                                .font(.subheadline.bold())
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(AppTheme.primaryBlue)
+                                .foregroundColor(.white)
+                                .cornerRadius(20)
+                                .shadow(color: AppTheme.primaryBlue.opacity(0.3), radius: 5, y: 3)
+                            }
+                        }
+                        .padding(.horizontal)
+                        
+                        if viewModel.newCourse.modules.isEmpty {
+                            EmptyStateView(
+                                icon: "folder.badge.plus",
+                                title: "No Modules Yet",
+                                message: "Start building your curriculum."
+                            )
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .padding(.top, 100)
+                        } else {
+                            ForEach(viewModel.newCourse.modules) { module in
+                                ExpandableModuleCard(
+                                    module: module,
+                                    viewModel: viewModel,
+                                    isExpanded: expandedModules.contains(module.id),
+                                    isEditing: isEditingModuleID == module.id,
+                                    editingTitle: $editingTitle,
+                                    editingDescription: $editingDescription,
+                                    newLessonName: $newLessonName,
+                                    showingAddLessonFor: $showingAddLessonFor,
+                                    onToggleExpand: {
+                                        withAnimation(.easeInOut(duration: 0.2)) {
+                                            if expandedModules.contains(module.id) {
+                                                expandedModules.remove(module.id)
+                                            } else {
+                                                expandedModules.insert(module.id)
                                             }
                                         }
-                                    )
-                                }
+                                    },
+                                    onEditStart: {
+                                        editingTitle = module.title
+                                        editingDescription = module.description ?? ""
+                                        isEditingModuleID = module.id
+                                    },
+                                    onEditEnd: {
+                                        if !editingTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                            var updatedModule = module
+                                            updatedModule.title = editingTitle
+                                            updatedModule.description = editingDescription.isEmpty ? nil : editingDescription
+                                            viewModel.updateModule(updatedModule)
+                                        }
+                                        isEditingModuleID = nil
+                                    },
+                                    onDelete: {
+                                        if let index = viewModel.newCourse.modules.firstIndex(where: { $0.id == module.id }) {
+                                            viewModel.deleteModule(at: IndexSet(integer: index))
+                                        }
+                                    }
+                                )
                             }
                         }
-                        
-                        // Preview Button
-                        Button(action: {
-                            viewModel.navigationPath.append("preview")
-                        }) {
-                            HStack(spacing: 8) {
-                                Text("Preview Course")
-                                    .font(.headline)
-                                Image(systemName: "eye.fill")
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(viewModel.newCourse.modules.isEmpty ? Color.gray.opacity(0.3) : AppTheme.primaryBlue)
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
-                            .shadow(color: viewModel.newCourse.modules.isEmpty ? .clear : AppTheme.primaryBlue.opacity(0.3), radius: 10, y: 5)
-                        }
-                        .disabled(viewModel.newCourse.modules.isEmpty)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 20)
-                        .padding(.bottom, 60)
                     }
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarBackButtonHidden(false)
-            .navigationDestination(for: String.self) { value in
-                if value == "preview" {
-                    CoursePreviewView(viewModel: viewModel)
-                }
-            }
-            .navigationDestination(for: LessonNavigation.self) { nav in
-                switch nav {
-                case .quiz(let moduleID, let lesson):
-                    LessonQuizEditorView(
-                        viewModel: viewModel,
-                        moduleID: moduleID,
-                        lessonID: lesson.id,
-                        lessonTitle: lesson.title
-                    )
-                case .content(let moduleID, let lesson):
-                    LessonContentEditorView(
-                        viewModel: viewModel,
-                        moduleID: moduleID,
-                        lessonID: lesson.id
-                    )
+                    
+                    // Preview Button
+                    NavigationLink(destination: CoursePreviewView(viewModel: viewModel)) {
+                        HStack(spacing: 8) {
+                            Text("Preview Course")
+                                .font(.headline)
+                            Image(systemName: "eye.fill")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(viewModel.newCourse.modules.isEmpty ? Color.gray.opacity(0.3) : AppTheme.primaryBlue)
+                        .foregroundColor(.white)
+                        .cornerRadius(16)
+                        .shadow(color: viewModel.newCourse.modules.isEmpty ? .clear : AppTheme.primaryBlue.opacity(0.3), radius: 10, y: 5)
+                    }
+                    .disabled(viewModel.newCourse.modules.isEmpty)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 20)
+                    .padding(.bottom, 60)
                 }
             }
         }
@@ -457,13 +429,7 @@ struct LessonInlineRow: View {
                 }
                 
                 // Edit Button
-                Button(action: {
-                    if lesson.type == .quiz {
-                        viewModel.navigationPath.append(LessonNavigation.quiz(moduleID: moduleID, lesson: lesson))
-                    } else {
-                        viewModel.navigationPath.append(LessonNavigation.content(moduleID: moduleID, lesson: lesson))
-                    }
-                }) {
+                NavigationLink(destination: destinationView(for: lesson)) {
                     Text(lesson.hasContent ? "Edit" : "Build")
                         .font(.caption.bold())
                         .padding(.horizontal, 10)
@@ -499,6 +465,24 @@ struct LessonInlineRow: View {
         var updated = lesson
         updated.type = type
         viewModel.updateLesson(moduleID: moduleID, lesson: updated)
+    }
+    
+    @ViewBuilder
+    private func destinationView(for lesson: Lesson) -> some View {
+        if lesson.type == .quiz {
+            LessonQuizEditorView(
+                viewModel: viewModel,
+                moduleID: moduleID,
+                lessonID: lesson.id,
+                lessonTitle: lesson.title
+            )
+        } else {
+            LessonContentEditorView(
+                viewModel: viewModel,
+                moduleID: moduleID,
+                lessonID: lesson.id
+            )
+        }
     }
 }
 

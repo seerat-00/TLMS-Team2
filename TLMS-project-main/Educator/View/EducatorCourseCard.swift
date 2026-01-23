@@ -225,9 +225,5 @@ struct EducatorCourseCard: View {
                 radius: 12,
                 x: 0,
                 y: 6)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            onPreview?()
-        }
     }
 }

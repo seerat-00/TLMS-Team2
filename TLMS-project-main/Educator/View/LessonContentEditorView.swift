@@ -153,10 +153,7 @@ struct LessonContentEditorView: View {
                 }
                 .alert("Content Saved", isPresented: $showSuccessAlert) {
                     Button("OK") {
-                        // Pop back to Course Structure by removing from navigation path
-                        if !viewModel.navigationPath.isEmpty {
-                            viewModel.navigationPath.removeLast()
-                        }
+                        dismiss()
                     }
                 } message: {
                     Text("Your lesson content has been saved successfully.")

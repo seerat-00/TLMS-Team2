@@ -215,27 +215,26 @@ struct EducatorDashboardView: View {
                 
                 LazyVStack(spacing: 20) {
                     ForEach(viewModel.otherCourses) { course in
-                        if course.status == .pendingReview {
-                            EducatorCourseCard(
-                                course: course,
-                                onDelete: { viewModel.confirmDelete(course) },
-                                showPreviewIcon: true
-                            )
-                        } else if course.status == .published {
+                        if course.status == .pendingReview || course.status == .rejected {
+                            // Wrap Pending and Rejected courses in NavigationLink for preview
                             NavigationLink(destination: EducatorCoursePreviewView(courseId: course.id)) {
-                                EmptyView()
+                                EducatorCourseCard(
+                                    course: course,
+                                    onDelete: { viewModel.confirmDelete(course) },
+                                    showPreviewIcon: true
+                                )
                             }
-                            .opacity(0)
-                            .frame(width: 0, height: 0)
-                            
-                            EducatorCourseCard(
-                                course: course,
-                                onUnpublish: { viewModel.confirmUnpublish(course) },
-                                onPreview: {
-                                    // Navigation handled by NavigationLink above
-                                },
-                                showPreviewIcon: true
-                            )
+                            .buttonStyle(PlainButtonStyle())
+                        } else if course.status == .published {
+                            // Published courses
+                            NavigationLink(destination: EducatorCoursePreviewView(courseId: course.id)) {
+                                EducatorCourseCard(
+                                    course: course,
+                                    onUnpublish: { viewModel.confirmUnpublish(course) },
+                                    showPreviewIcon: true
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         } else {
                             EducatorCourseCard(course: course)
                         }
