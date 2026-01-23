@@ -695,21 +695,13 @@ struct AdminOverviewView: View {
                 }
             }
             
-            // ✅ iOS Bottom Sheet for Pending
-            .confirmationDialog(
-                "Pending Items",
-                isPresented: $showPendingSheet,
-                titleVisibility: .visible
-            ) {
-                Button("Pending Educators (\(pendingEducatorsCount))") {
-                    selectedTab = 1
-                }
-                
-                Button("Pending Courses (\(pendingCoursesCount))") {
-                    selectedTab = 2
-                }
-                
-                Button("Cancel", role: .cancel) { }
+            // ✅ Pending Sheet
+            .sheet(isPresented: $showPendingSheet) {
+                PendingSelectionSheet(
+                    educatorsCount: pendingEducatorsCount,
+                    coursesCount: pendingCoursesCount,
+                    selectedTab: $selectedTab
+                )
             }
             
             // ✅ Reports Sheet
@@ -771,8 +763,8 @@ struct QuickActionsTilesCard: View {
                     title: "Pending",
                     icon: "hourglass",
                     tint: Color(uiColor: .systemOrange),
-                    subtitle1: "Edu: \(pendingEducatorsCount)",
-                    subtitle2: "Courses: \(pendingCoursesCount)",
+                    subtitle1: "\(pendingEducatorsCount)",
+                    subtitle2: "\(pendingCoursesCount)",
                     badgeCount: totalPendingCount,
                     action: onPendingTap
                 )
@@ -918,12 +910,12 @@ struct QuickTile: View {
                 
                 // Subtitles as chips (ONLY for Pending)
                 if hasSubtitles {
-                    VStack(spacing: 6) {
-                        if let subtitle1 {
-                            PendingMiniRow(text: subtitle1)
+                    HStack(spacing: 8) {
+                        if let count1 = subtitle1 {
+                            PendingMiniRow(icon: "person.2.fill", text: count1)
                         }
-                        if let subtitle2 {
-                            PendingMiniRow(text: subtitle2)
+                        if let count2 = subtitle2 {
+                            PendingMiniRow(icon: "book.fill", text: count2)
                         }
                     }
                     .padding(.top, 4)
@@ -959,17 +951,21 @@ struct QuickTile: View {
     }
 }
 private struct PendingMiniRow: View {
+    let icon: String
     let text: String
     
     var body: some View {
-        Text(text)
-            .font(.caption.weight(.semibold))
-            .foregroundColor(.secondary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
-            .background(Color(uiColor: .tertiarySystemGroupedBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .padding(.horizontal, 12)
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.caption2)
+            Text(text)
+                .font(.caption.weight(.semibold))
+        }
+        .foregroundColor(.secondary)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(Color(uiColor: .tertiarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 
@@ -1081,6 +1077,8 @@ struct RevenueDistributionCardIOS: View {
                                 Text(item.value.formatted(.currency(code: "INR").precision(.fractionLength(0))))
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundColor(.primary)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.8)
                             }
                         }
                         
@@ -1095,6 +1093,8 @@ struct RevenueDistributionCardIOS: View {
                             
                             Text(totalRevenue.formatted(.currency(code: "INR").precision(.fractionLength(0))))
                                 .font(.headline)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                         }
                     }
                 }
@@ -1111,5 +1111,102 @@ struct RevenueDistributionCardIOS: View {
             RoundedRectangle(cornerRadius: 18)
                 .stroke(Color.primary.opacity(0.06), lineWidth: 1)
         )
+    }
+}
+
+private struct PendingSelectionSheet: View {
+    let educatorsCount: Int
+    let coursesCount: Int
+    @Binding var selectedTab: Int
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            
+            // Handle indicator
+            Capsule()
+                .fill(Color.secondary.opacity(0.2))
+                .frame(width: 40, height: 4)
+                .padding(.top, 12)
+            
+            Text("Pending Review")
+                .font(.title3.bold())
+            
+            VStack(spacing: 12) {
+                Button {
+                    selectedTab = 1
+                    dismiss()
+                } label: {
+                    HStack {
+                        Label {
+                            Text("Pending Educators")
+                                .fontWeight(.medium)
+                        } icon: {
+                            Image(systemName: "person.2.badge.gearshape.fill")
+                                .foregroundColor(.orange)
+                        }
+                        .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        Text("\(educatorsCount)")
+                            .font(.subheadline.bold())
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color.orange)
+                            .clipShape(Capsule())
+                    }
+                    .padding()
+                    .background(Color(uiColor: .secondarySystemGroupedBackground))
+                    .cornerRadius(16)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.primary.opacity(0.05), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+                
+                Button {
+                    selectedTab = 2
+                    dismiss()
+                } label: {
+                    HStack {
+                        Label {
+                            Text("Pending Courses")
+                                .fontWeight(.medium)
+                        } icon: {
+                            Image(systemName: "book.closed.fill")
+                                .foregroundColor(.orange)
+                        }
+                        .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        Text("\(coursesCount)")
+                            .font(.subheadline.bold())
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color.orange)
+                            .clipShape(Capsule())
+                    }
+                    .padding()
+                    .background(Color(uiColor: .secondarySystemGroupedBackground))
+                    .cornerRadius(16)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.primary.opacity(0.05), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal)
+            
+            Spacer()
+        }
+        .background(Color(uiColor: .systemGroupedBackground))
+        .presentationDetents([.fraction(0.35)])
+        .presentationDragIndicator(.hidden)
     }
 }

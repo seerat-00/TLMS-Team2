@@ -152,79 +152,169 @@ struct AdminCourseValueView: View {
 
 struct CourseValueRow: View {
     let course: Course
+    @Environment(\.colorScheme) var colorScheme
+    
+    // MARK: - Category Styling
+    private var categoryColor: Color {
+        switch course.category.lowercased() {
+        case "design": return AppTheme.accentPurple
+        case "development", "programming", "code": return AppTheme.primaryBlue
+        case "marketing": return AppTheme.warningOrange
+        case "business": return AppTheme.accentTeal
+        case "data", "analytics": return AppTheme.successGreen
+        case "photography": return .pink
+        case "music": return .indigo
+        default: return AppTheme.secondaryText
+        }
+    }
+    
+    private var categoryIcon: String {
+        switch course.category.lowercased() {
+        case "design": return "pencil.and.outline"
+        case "development", "programming", "code": return "chevron.left.forwardslash.chevron.right"
+        case "marketing": return "megaphone.fill"
+        case "business": return "briefcase.fill"
+        case "data", "analytics": return "chart.bar.fill"
+        case "photography": return "camera.fill"
+        case "music": return "music.note"
+        default: return "book.fill"
+        }
+    }
     
     var body: some View {
-        HStack(spacing: 16) {
-            // Thumbnail / Icon
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(AppTheme.primaryBlue.opacity(0.1))
-                    .frame(width: 60, height: 60)
+        VStack(alignment: .leading, spacing: 0) {
+            // MARK: - Image Header
+            ZStack(alignment: .topLeading) {
+                // Course Image
+                let imageName = CourseImageHelper.getCourseImage(courseCoverUrl: course.courseCoverUrl, category: course.category)
                 
-                if let url = course.courseCoverUrl, let _ = URL(string: url) {
-                    // Ideally use AsyncImage, simplified here with icon fallback
-                    AsyncImage(url: URL(string: url)) { image in
-                        image.resizable().aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Image(systemName: "book.fill")
-                            .font(.title2)
-                            .foregroundColor(AppTheme.primaryBlue)
-                    }
-                    .frame(width: 60, height: 60)
-                    .cornerRadius(10)
-                    .clipped()
+                if let uiImage = UIImage(named: imageName) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 150)
+                        .clipped()
                 } else {
-                    Image(systemName: "book.fill")
-                        .font(.title2)
-                        .foregroundColor(AppTheme.primaryBlue)
+                    LinearGradient(
+                        colors: [categoryColor.opacity(0.6), categoryColor.opacity(0.3)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .overlay(
+                        Image(systemName: categoryIcon)
+                            .font(.system(size: 44, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.3))
+                    )
+                    .frame(height: 150)
                 }
-            }
-            
-            VStack(alignment: .leading, spacing: 6) {
-                Text(course.title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .lineLimit(2)
                 
-                HStack(spacing: 12) {
-                    // Rating
-                    HStack(spacing: 2) {
-                        Image(systemName: "star.fill")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                        Text(String(format: "%.1f", course.ratingAvg ?? 0.0))
-                            .font(.caption.weight(.medium))
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    // Students
-                    HStack(spacing: 2) {
-                        Image(systemName: "person.2.fill")
-                            .font(.caption)
-                            .foregroundColor(AppTheme.primaryBlue)
-                        Text("\(course.enrolledCount ?? 0)")
-                            .font(.caption.weight(.medium))
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    // Price
-                    HStack(spacing: 2) {
+                // Gradient Overlay
+                LinearGradient(
+                    colors: [Color.clear, Color.black.opacity(0.6)],
+                    startPoint: .center,
+                    endPoint: .bottom
+                )
+                .frame(height: 150)
+                
+                // Price Tag (Top Right)
+                VStack {
+                    HStack {
+                        Spacer()
                         Text(course.price == 0 ? "Free" : (course.price ?? 0.0).formatted(.currency(code: "INR")))
-                            .font(.caption.weight(.semibold))
-                            .foregroundColor(AppTheme.successGreen)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(AppTheme.successGreen.opacity(0.1))
-                            .cornerRadius(4)
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(course.price == 0 ? AppTheme.successGreen : .white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(
+                                changePriceBackground(price: course.price)
+                            )
+                            .cornerRadius(8)
+                            .shadow(radius: 2)
                     }
+                    Spacer()
+                }
+                .padding(12)
+                
+                // Title (Bottom Left)
+                VStack {
+                    Spacer()
+                    Text(course.title)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
+                        .lineLimit(2)
+                        .shadow(color: .black.opacity(0.3), radius: 2, x: 0, y: 1)
+                        .padding(16)
                 }
             }
+            .frame(height: 150)
+            .background(Color.black)
             
-            Spacer()
+            // MARK: - Content Section
+            VStack(alignment: .leading, spacing: 12) {
+                
+                // Metadata Row
+                HStack(spacing: 12) {
+                    // Category
+                    Label(course.category, systemImage: "folder.fill")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(categoryColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(categoryColor.opacity(0.1))
+                        .cornerRadius(6)
+                    
+                    Spacer()
+                    
+                    // Rating
+                    if let rating = course.ratingAvg, rating > 0 {
+                        HStack(spacing: 2) {
+                            Image(systemName: "star.fill")
+                                .font(.caption2)
+                                .foregroundColor(.orange)
+                            Text(String(format: "%.1f", rating))
+                                .font(.caption.weight(.bold))
+                                .foregroundColor(.primary)
+                        }
+                    } else {
+                        Text("No ratings")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                // Stats Row
+                HStack(spacing: 16) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "person.2.fill")
+                            .foregroundColor(AppTheme.primaryBlue)
+                        Text("\(course.enrolledCount ?? 0) Enrolled")
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "book.fill")
+                            .foregroundColor(AppTheme.primaryBlue)
+                        Text("\(course.modules.count) Modules")
+                    }
+                    
+                    Spacer()
+                }
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+            .padding(16)
         }
-        .padding(12)
         .background(AppTheme.cardBackground)
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
+    }
+    
+    // Helper to style price tag
+    private func changePriceBackground(price: Double?) -> Color {
+        if price == 0 {
+            return Color.white
+        } else {
+            return AppTheme.primaryBlue
+        }
     }
 }
 
