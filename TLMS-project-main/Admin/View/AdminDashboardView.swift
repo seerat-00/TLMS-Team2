@@ -22,19 +22,24 @@ struct AdminDashboardView: View {
     @Environment(\.colorScheme) var colorScheme
     @StateObject private var courseService = CourseService()
     
+    @State private var selectedTab: Int = 0
+
     // Feature Flags
     private let isRevenueEnabled = true
     
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab)  {
             // MARK: - Overview Tab
             AdminOverviewView(
                 activeCourses: activeCourses,
-                allEnrollments: allEnrollments,
-                allUsers: allUsers,
-                isRevenueEnabled: isRevenueEnabled,
-                onRefresh: { await loadData() },
-                onLogout: handleLogout
+                    allEnrollments: allEnrollments,
+                    allUsers: allUsers,
+                    isRevenueEnabled: isRevenueEnabled,
+                    onRefresh: { await loadData() },
+                    onLogout: handleLogout,
+                    pendingEducatorsCount: pendingEducators.count,
+                    pendingCoursesCount: pendingCourses.count,
+                    selectedTab: $selectedTab
             )
             .tabItem {
                 Label("Overview", systemImage: "chart.pie.fill")
