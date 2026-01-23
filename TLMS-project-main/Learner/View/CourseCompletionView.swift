@@ -257,23 +257,41 @@ struct CourseCompletionView: View {
 
             if rating > 0 {
                 Button(action: {
-                    // Submit rating action
-                }) {
-                    Text("Submit Rating")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            LinearGradient(
-                                colors: [Color(red: 0.4, green: 0.6, blue: 1.0), Color(red: 0.5, green: 0.4, blue: 0.9)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                    Task {
+                        let success = await courseService.submitReview(
+                            courseID: course.id,
+                            userID: userId,
+                            rating: rating,
+                            reviewText: reviewText
                         )
-                        .cornerRadius(12)
-                        .shadow(color: Color(red: 0.4, green: 0.6, blue: 1.0).opacity(0.3), radius: 8, x: 0, y: 4)
+                        
+                        if success {
+                            // Close the view or show thanks
+                            onDismiss()
+                        }
+                    }
+                }) {
+                    if courseService.isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    } else {
+                        Text("Submit Rating")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white)
+                    }
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    LinearGradient(
+                        colors: [Color(red: 0.4, green: 0.6, blue: 1.0), Color(red: 0.5, green: 0.4, blue: 0.9)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(12)
+                .shadow(color: Color(red: 0.4, green: 0.6, blue: 1.0).opacity(0.3), radius: 8, x: 0, y: 4)
+                .disabled(courseService.isLoading)
                 .transition(.scale.combined(with: .opacity))
             }
         }

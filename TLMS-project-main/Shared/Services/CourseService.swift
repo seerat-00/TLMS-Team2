@@ -736,6 +736,42 @@ class CourseService: ObservableObject {
         }
     }
 
+    // MARK: - Review Submission
+    
+    func submitReview(courseID: UUID, userID: UUID, rating: Int, reviewText: String) async -> Bool {
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+        
+        do {
+            struct ReviewInsert: Encodable {
+                let course_id: UUID
+                let user_id: UUID
+                let rating: Int
+                let review_text: String?
+            }
+            
+            let review = ReviewInsert(
+                course_id: courseID,
+                user_id: userID,
+                rating: rating,
+                review_text: reviewText.isEmpty ? nil : reviewText
+            )
+            
+            try await supabase
+                .from("course_reviews")
+                .insert(review)
+                .execute()
+            
+            print("✅ Review submitted successfully")
+            return true
+        } catch {
+            print("❌ Error submitting review: \(error)")
+            errorMessage = "Failed to submit review: \(error.localizedDescription)"
+            return false
+        }
+    }
+
 }
 
 
